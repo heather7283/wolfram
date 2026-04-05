@@ -2,6 +2,7 @@ package io.github.heather7283.wolfram.ui.configs
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -124,17 +126,24 @@ fun ConfigsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
-                items(uiState.configs) {
-                    ConfigEntry(
-                        config = it,
-                        onClick = {
-                            Timber.d("${it.name} clicked")
-                        },
-                        onEdit = {
-                            navActions.navigateToAddEditConfig("Edit config", it)
-                        },
-                        onDelete = {},
-                    )
+                if (uiState.configs.isEmpty()) {
+                    item {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillParentMaxSize()
+                        ) {
+                            Text("Empty")
+                        }
+                    }
+                } else {
+                    items(uiState.configs) {
+                        ConfigEntry(
+                            config = it,
+                            onClick = { Timber.d("${it.name} onClick clicked") },
+                            onEdit = { Timber.d("${it.name} onEdit clicked") },
+                            onDelete = { Timber.d("${it.name} onDelete clicked") },
+                        )
+                    }
                 }
             }
         }
