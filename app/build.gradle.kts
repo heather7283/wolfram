@@ -5,6 +5,13 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+kotlin {
+    compilerOptions {
+        // needed for arrow
+        freeCompilerArgs.add("-Xcontext-parameters")
+    }
+}
+
 android {
     namespace = "io.github.heather7283.wolfram"
     compileSdk {
@@ -64,6 +71,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation(libs.arrow.core)
     implementation(libs.androidx.compose.material.icons)
     implementation(libs.timber)
     implementation(libs.hilt.android.core)
