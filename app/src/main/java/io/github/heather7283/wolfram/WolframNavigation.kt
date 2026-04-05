@@ -1,11 +1,11 @@
 package io.github.heather7283.wolfram
 
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.navigation.NavHostController
-import io.github.heather7283.wolfram.data.XrayConfig
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.NavHostController
+import io.github.heather7283.wolfram.data.XrayConfig
 
 enum class WolframToplevelDestination(
     val route: String,

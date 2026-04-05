@@ -1,9 +1,9 @@
 package io.github.heather7283.wolfram.ui.configs
 
 import androidx.lifecycle.ViewModel
-import io.github.heather7283.wolfram.data.XrayConfig
-import io.github.heather7283.wolfram.data.ConfigsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.heather7283.wolfram.data.ConfigsRepository
+import io.github.heather7283.wolfram.data.XrayConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
