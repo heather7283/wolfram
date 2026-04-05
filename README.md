@@ -7,5 +7,5 @@ Proxy client for android based on [Xray-core].
 - https://github.com/android/compose-samples
 - https://github.com/android/snippets
 
-[Xray-core]: https://github.com/XTLS/Xray-core/releases
+[Xray-core]: https://github.com/XTLS/Xray-core
 
