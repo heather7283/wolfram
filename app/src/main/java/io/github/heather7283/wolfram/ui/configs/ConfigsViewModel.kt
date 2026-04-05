@@ -7,6 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 data class ConfigsUiState(
@@ -21,8 +22,10 @@ class ConfigsViewModel @Inject constructor(
     val uiState: StateFlow<ConfigsUiState> = _uiState.asStateFlow()
 
     fun refresh() {
-        _uiState.value = ConfigsUiState(
-            configs = configsRepository.getConfigs()
-        )
+        _uiState.update { currentState ->
+            currentState.copy(
+                configs = configsRepository.getConfigs()
+            )
+        }
     }
 }
