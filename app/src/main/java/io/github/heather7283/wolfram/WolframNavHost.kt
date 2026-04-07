@@ -12,9 +12,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import io.github.heather7283.wolfram.ui.addeditconfig.AddEditConfigScreen
 import io.github.heather7283.wolfram.ui.configs.ConfigsScreen
 import io.github.heather7283.wolfram.ui.settings.SettingsScreen
 
@@ -52,6 +55,17 @@ fun WolframNavHost(modifier: Modifier = Modifier) {
                     WolframToplevelDestination.SETTINGS -> SettingsScreen(bar, navActions)
                 }
             }
+        }
+
+        composable(
+            "addEditConfig/{title}?configName={configName}",
+            arguments = listOf(
+                navArgument("title") { type = NavType.StringType },
+                navArgument("configName") { type = NavType.StringType; nullable = true },
+            )
+        ) { entry ->
+            val title = entry.arguments?.getString("title")!!
+            AddEditConfigScreen(title)
         }
     }
 }

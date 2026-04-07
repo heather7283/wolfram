@@ -117,7 +117,7 @@ fun ConfigsScreen(
                         ConfigEntry(
                             config = it,
                             onClick = { Timber.d("${it.name} onClick clicked") },
-                            onEdit = { Timber.d("${it.name} onEdit clicked") },
+                            onEdit = { navActions.navigateToAddEditConfig("Edit config", it) },
                             onDelete = { viewModel.deleteConfig(it) },
                         )
                     }

@@ -1,0 +1,80 @@
+package io.github.heather7283.wolfram.ui.addeditconfig
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import arrow.core.getOrElse
+import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.heather7283.wolfram.data.ConfigsRepository
+import io.github.heather7283.wolfram.data.XrayConfig
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import timber.log.Timber
+import javax.inject.Inject
+
+data class AddEditConfigUiState(
+    val name: String = "",
+    val content: String = "",
+    val isLoading: Boolean = false,
+    val isModified: Boolean = false,
+)
+
+@HiltViewModel
+class AddEditConfigViewModel @Inject constructor(
+    private val configsRepository: ConfigsRepository,
+    savedStateHandle: SavedStateHandle,
+) : ViewModel() {
+    private val configName: String? = savedStateHandle["configName"]
+
+    private val _uiState = MutableStateFlow(AddEditConfigUiState())
+    val uiState = _uiState.asStateFlow()
+
+    init {
+        if (configName != null) {
+            loadConfig(configName)
+        }
+    }
+
+    private fun loadConfig(configName: String) {
+        _uiState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            configsRepository.getConfig(configName).onLeft { e ->
+                Timber.e(e)
+            }.onRight { config ->
+                configsRepository.getConfigText(config).onLeft { e ->
+                    Timber.e(e)
+                }.onRight { content ->
+                    _uiState.update { state ->
+                        state.copy(name = config.name, content = content, isLoading = false)
+                    }
+                }
+            }
+        }
+    }
+
+    fun saveConfig() {
+        viewModelScope.launch {
+            configsRepository.saveConfig(_uiState.value.name, _uiState.value.content).onLeft { e ->
+                Timber.e(e)
+            }.onRight {
+                _uiState.update { state -> state.copy(isModified = false) }
+            }
+        }
+    }
+
+    fun updateName(name: String) {
+        _uiState.update { state -> state.copy(name = name, isModified = true) }
+    }
+
+    fun updateContent(content: String) {
+        _uiState.update { state -> state.copy(content = content, isModified = true) }
+    }
+}

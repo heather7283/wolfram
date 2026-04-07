@@ -32,17 +32,13 @@ import kotlin.io.path.writeText
 @Singleton
 class ConfigsRepository @Inject constructor(application: Application) {
     private val configsDir = Path(application.filesDir.path) / "configs"
-    private val badCharRegex = Regex("""[|?*<>":+\[\]/\\]""")
+    private val validNameRegex = Regex("""^[^|?*<>":+\[\]/\\]+$""")
 
     private val _configs = MutableStateFlow<List<XrayConfig>>(emptyList())
 
     init {
         configsDir.createDirectories()
         refreshConfigs()
-
-        for (i in 1..5) {
-            saveConfig("test${i}", "{}")
-        }
     }
 
     private fun loadConfigs(): List<XrayConfig> {
@@ -60,8 +56,8 @@ class ConfigsRepository @Inject constructor(application: Application) {
         _configs.update { loadConfigs() }
     }
 
-    fun saveConfig(name: String, text: String): XrayConfig {
-        require(!badCharRegex.containsMatchIn(name)) { "Invalid characters in config name" }
+    fun saveConfig(name: String, text: String) = Either.catch {
+        require(validNameRegex.matchEntire(name) != null) { "Invalid config name" }
 
         val newConfig = XrayConfig(name, configsDir / "${name}.jsonc")
         newConfig.jsonPath.writeText(text)
@@ -70,17 +66,21 @@ class ConfigsRepository @Inject constructor(application: Application) {
             _configs.update { current -> listOf(newConfig) + current }
         }
 
-        return newConfig
+        newConfig
     }
 
-    fun deleteConfig(config: XrayConfig) {
-        Timber.d("deleteConfig: before deletion, ${config.jsonPath}")
+    fun deleteConfig(config: XrayConfig) = Either.catch {
         config.jsonPath.deleteExisting()
-        Timber.d("deleteConfig: after deletion, ${config.jsonPath}, exists: ${config.jsonPath.exists()}")
         _configs.update { current -> current.filter { it.name != config.name } }
     }
 
-    fun getConfigText(config: XrayConfig): String {
-        return config.jsonPath.readText()
+    fun getConfig(name: String) = Either.catch {
+        val jsonPath = configsDir / "${name}.jsonc"
+        check(jsonPath.exists()) { "Config $name does not exist" }
+        XrayConfig(name, jsonPath)
+    }
+
+    fun getConfigText(config: XrayConfig) = Either.catch {
+        config.jsonPath.readText()
     }
 }
