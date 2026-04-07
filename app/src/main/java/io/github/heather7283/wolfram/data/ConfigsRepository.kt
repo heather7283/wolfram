@@ -1,14 +1,29 @@
 package io.github.heather7283.wolfram.data
 
 import android.app.Application
+import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.raise.context.bind
+import arrow.core.raise.context.either
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import timber.log.Timber
+import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createDirectory
+import kotlin.io.path.deleteExisting
 import kotlin.io.path.deleteIfExists
+import kotlin.io.path.deleteRecursively
 import kotlin.io.path.div
+import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 import kotlin.io.path.readText
@@ -19,42 +34,53 @@ class ConfigsRepository @Inject constructor(application: Application) {
     private val configsDir = Path(application.filesDir.path) / "configs"
     private val badCharRegex = Regex("""[|?*<>":+\[\]/\\]""")
 
-    init {
-        try {
-            configsDir.createDirectories()
-        } catch (_: FileAlreadyExistsException) {
-            Timber.w("configsDir already exists and is not a dir, attempting to delete and recreate")
-            configsDir.deleteIfExists()
-            configsDir.createDirectory()
-        }
+    private val _configs = MutableStateFlow<List<XrayConfig>>(emptyList())
 
-        for (i in 1..30) {
-            addOrUpdateConfig("test${i}", "{}")
+    init {
+        configsDir.createDirectories()
+        refreshConfigs()
+
+        for (i in 1..5) {
+            saveConfig("test${i}", "{}")
         }
     }
 
-    fun getConfigs(): List<XrayConfig> {
+    private fun loadConfigs(): List<XrayConfig> {
         return configsDir.listDirectoryEntries()
+            .filter { it.name.endsWith(".jsonc") }
             .map { XrayConfig(name = it.name.removeSuffix(".jsonc"), jsonPath = it) }
             .toList()
     }
 
-    // TODO: proper error reporting
-    fun addOrUpdateConfig(name: String, text: String): String? {
-        if (badCharRegex.containsMatchIn(name)) {
-            return "Invalid character(s) in config name"
-        }
-
-        val configFile = configsDir / name
-        if (configFile.runCatching { writeText(text) }.isFailure) {
-            return "Failed to write config content to ${configFile}"
-        }
-
-        return null
+    fun getConfigsFlow(): Flow<List<XrayConfig>> {
+        return _configs.asStateFlow()
     }
 
-    fun getConfigText(name: String): String {
-        val configFile = configsDir / "${name}.jsonc"
-        return configFile.readText()
+    fun refreshConfigs() {
+        _configs.update { loadConfigs() }
+    }
+
+    fun saveConfig(name: String, text: String): XrayConfig {
+        require(!badCharRegex.containsMatchIn(name)) { "Invalid characters in config name" }
+
+        val newConfig = XrayConfig(name, configsDir / "${name}.jsonc")
+        newConfig.jsonPath.writeText(text)
+
+        if (_configs.value.firstOrNull { it.name == newConfig.name } == null) {
+            _configs.update { current -> listOf(newConfig) + current }
+        }
+
+        return newConfig
+    }
+
+    fun deleteConfig(config: XrayConfig) {
+        Timber.d("deleteConfig: before deletion, ${config.jsonPath}")
+        config.jsonPath.deleteExisting()
+        Timber.d("deleteConfig: after deletion, ${config.jsonPath}, exists: ${config.jsonPath.exists()}")
+        _configs.update { current -> current.filter { it.name != config.name } }
+    }
+
+    fun getConfigText(config: XrayConfig): String {
+        return config.jsonPath.readText()
     }
 }

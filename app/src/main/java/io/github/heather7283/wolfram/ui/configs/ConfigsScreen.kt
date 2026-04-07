@@ -118,7 +118,7 @@ fun ConfigsScreen(
                             config = it,
                             onClick = { Timber.d("${it.name} onClick clicked") },
                             onEdit = { Timber.d("${it.name} onEdit clicked") },
-                            onDelete = { Timber.d("${it.name} onDelete clicked") },
+                            onDelete = { viewModel.deleteConfig(it) },
                         )
                     }
                 }
