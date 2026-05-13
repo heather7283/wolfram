@@ -19,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import io.github.heather7283.wolfram.ui.addeditconfig.AddEditConfigScreen
 import io.github.heather7283.wolfram.ui.configs.ConfigsScreen
+import io.github.heather7283.wolfram.ui.dashboard.DashboardScreen
 import io.github.heather7283.wolfram.ui.settings.SettingsScreen
 
 @Composable
@@ -51,6 +52,7 @@ fun WolframNavHost(modifier: Modifier = Modifier) {
         WolframToplevelDestination.entries.forEach { destination ->
             composable(destination.route) {
                 when (destination) {
+                    WolframToplevelDestination.DASHBOARD -> DashboardScreen(bar, navActions)
                     WolframToplevelDestination.CONFIGS -> ConfigsScreen(bar, navActions)
                     WolframToplevelDestination.SETTINGS -> SettingsScreen(bar, navActions)
                 }
