@@ -26,7 +26,7 @@ import io.github.heather7283.wolfram.ui.settings.SettingsScreen
 fun WolframNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val navActions = remember(navController) { WolframNavigationActions(navController) }
-    val startDestination = WolframToplevelDestination.entries.first()
+    val startDestination = WolframTopLevelDestination.entries.first()
     var selectedDestination by rememberSaveable { mutableIntStateOf(startDestination.ordinal) }
 
     NavHost(
@@ -36,7 +36,7 @@ fun WolframNavHost(modifier: Modifier = Modifier) {
     ) {
         val bar = @Composable {
             NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
-                WolframToplevelDestination.entries.forEach { destination ->
+                WolframTopLevelDestination.entries.forEach { destination ->
                     NavigationBarItem(
                         selected = selectedDestination == destination.ordinal,
                         onClick = {
@@ -49,12 +49,12 @@ fun WolframNavHost(modifier: Modifier = Modifier) {
                 }
             }
         }
-        WolframToplevelDestination.entries.forEach { destination ->
+        WolframTopLevelDestination.entries.forEach { destination ->
             composable(destination.route) {
                 when (destination) {
-                    WolframToplevelDestination.DASHBOARD -> DashboardScreen(bar, navActions)
-                    WolframToplevelDestination.CONFIGS -> ConfigsScreen(bar, navActions)
-                    WolframToplevelDestination.SETTINGS -> SettingsScreen(bar, navActions)
+                    WolframTopLevelDestination.DASHBOARD -> DashboardScreen(bar, navActions)
+                    WolframTopLevelDestination.CONFIGS -> ConfigsScreen(bar, navActions)
+                    WolframTopLevelDestination.SETTINGS -> SettingsScreen(bar, navActions)
                 }
             }
         }

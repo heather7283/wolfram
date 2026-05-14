@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import io.github.heather7283.wolfram.data.ConfigFile
 
-enum class WolframToplevelDestination(
+enum class WolframTopLevelDestination(
     val route: String,
     val icon: ImageVector,
     val label: String,
