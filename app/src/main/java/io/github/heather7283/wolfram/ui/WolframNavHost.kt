@@ -1,4 +1,4 @@
-package io.github.heather7283.wolfram
+package io.github.heather7283.wolfram.ui
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -17,6 +17,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import io.github.heather7283.wolfram.WolframNavigationActions
+import io.github.heather7283.wolfram.WolframTopLevelDestination
 import io.github.heather7283.wolfram.ui.addeditconfig.AddEditConfigScreen
 import io.github.heather7283.wolfram.ui.configs.ConfigsScreen
 import io.github.heather7283.wolfram.ui.dashboard.DashboardScreen
