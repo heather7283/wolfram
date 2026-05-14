@@ -3,8 +3,8 @@ package io.github.heather7283.wolfram.ui.configs
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.heather7283.wolfram.data.ConfigsRepository
-import io.github.heather7283.wolfram.data.XrayConfig
+import io.github.heather7283.wolfram.data.ConfigFilesRepository
+import io.github.heather7283.wolfram.data.ConfigFile
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -15,16 +15,16 @@ import timber.log.Timber
 import javax.inject.Inject
 
 data class ConfigsUiState(
-    val configs: List<XrayConfig> = emptyList(),
+    val configs: List<ConfigFile> = emptyList(),
     val isLoading: Boolean = false,
     val userMessage: String? = null,
 )
 
 @HiltViewModel
 class ConfigsViewModel @Inject constructor(
-    private val configsRepository: ConfigsRepository,
+    private val configFilesRepository: ConfigFilesRepository,
 ) : ViewModel() {
-    val uiState: StateFlow<ConfigsUiState> = configsRepository.getConfigsFlow()
+    val uiState: StateFlow<ConfigsUiState> = configFilesRepository.getConfigFilesFlow()
         .map {
             ConfigsUiState(configs = it)
         }
@@ -39,10 +39,10 @@ class ConfigsViewModel @Inject constructor(
         )
 
     fun refresh() {
-        viewModelScope.launch { configsRepository.refreshConfigs() }
+        viewModelScope.launch { configFilesRepository.refreshConfigFiles() }
     }
 
-    fun deleteConfig(config: XrayConfig) {
-        viewModelScope.launch { configsRepository.deleteConfig(config) }
+    fun deleteConfig(config: ConfigFile) {
+        viewModelScope.launch { configFilesRepository.deleteConfigFile(config) }
     }
 }

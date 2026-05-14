@@ -2,7 +2,7 @@ package io.github.heather7283.wolfram.data
 
 import java.nio.file.Path
 
-data class XrayConfig(
+data class ConfigFile(
     val name: String,
-    val jsonPath: Path,
+    val path: Path,
 )

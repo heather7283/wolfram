@@ -31,12 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.heather7283.wolfram.WolframNavigationActions
-import io.github.heather7283.wolfram.data.XrayConfig
+import io.github.heather7283.wolfram.data.ConfigFile
 import timber.log.Timber
 
 @Composable
 fun ConfigEntry(
-    config: XrayConfig,
+    config: ConfigFile,
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,

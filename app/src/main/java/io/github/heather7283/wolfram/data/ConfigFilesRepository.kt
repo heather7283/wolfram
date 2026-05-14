@@ -19,37 +19,37 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 @Singleton
-class ConfigsRepository @Inject constructor(application: Application) {
-    private val configsDir = Path(application.filesDir.path) / "configs"
+class ConfigFilesRepository @Inject constructor(application: Application) {
+    private val configFilesDir = Path(application.filesDir.path) / "configs"
     private val validNameRegex = Regex("""^[^|?*<>":+\[\]/\\]+$""")
 
-    private val _configs = MutableStateFlow<List<XrayConfig>>(emptyList())
+    private val _configs = MutableStateFlow<List<ConfigFile>>(emptyList())
 
     init {
-        configsDir.createDirectories()
-        refreshConfigs()
+        configFilesDir.createDirectories()
+        refreshConfigFiles()
     }
 
-    private fun loadConfigs(): List<XrayConfig> {
-        return configsDir.listDirectoryEntries()
+    private fun loadConfigFiles(): List<ConfigFile> {
+        return configFilesDir.listDirectoryEntries()
             .filter { it.name.endsWith(".jsonc") }
-            .map { XrayConfig(name = it.name.removeSuffix(".jsonc"), jsonPath = it) }
+            .map { ConfigFile(name = it.name.removeSuffix(".jsonc"), path = it) }
             .toList()
     }
 
-    fun getConfigsFlow(): Flow<List<XrayConfig>> {
+    fun getConfigFilesFlow(): Flow<List<ConfigFile>> {
         return _configs.asStateFlow()
     }
 
-    fun refreshConfigs() {
-        _configs.update { loadConfigs() }
+    fun refreshConfigFiles() {
+        _configs.update { loadConfigFiles() }
     }
 
-    fun saveConfig(name: String, text: String) = Either.catch {
+    fun saveOrUpdateConfigFile(name: String, text: String) = Either.catch {
         require(validNameRegex.matchEntire(name) != null) { "Invalid config name" }
 
-        val newConfig = XrayConfig(name, configsDir / "${name}.jsonc")
-        newConfig.jsonPath.writeText(text)
+        val newConfig = ConfigFile(name, configFilesDir / "${name}.jsonc")
+        newConfig.path.writeText(text)
 
         if (_configs.value.firstOrNull { it.name == newConfig.name } == null) {
             _configs.update { current -> listOf(newConfig) + current }
@@ -58,18 +58,18 @@ class ConfigsRepository @Inject constructor(application: Application) {
         newConfig
     }
 
-    fun deleteConfig(config: XrayConfig) = Either.catch {
-        config.jsonPath.deleteExisting()
+    fun deleteConfigFile(config: ConfigFile) = Either.catch {
+        config.path.deleteExisting()
         _configs.update { current -> current.filter { it.name != config.name } }
     }
 
-    fun getConfig(name: String) = Either.catch {
-        val jsonPath = configsDir / "${name}.jsonc"
+    fun getConfigFile(name: String) = Either.catch {
+        val jsonPath = configFilesDir / "${name}.jsonc"
         check(jsonPath.exists()) { "Config $name does not exist" }
-        XrayConfig(name, jsonPath)
+        ConfigFile(name, jsonPath)
     }
 
-    fun getConfigText(config: XrayConfig) = Either.catch {
-        config.jsonPath.readText()
+    fun getConfigFileText(config: ConfigFile) = Either.catch {
+        config.path.readText()
     }
 }
