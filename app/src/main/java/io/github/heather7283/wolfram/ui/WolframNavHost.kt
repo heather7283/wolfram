@@ -42,7 +42,7 @@ fun WolframNavHost(modifier: Modifier = Modifier) {
                     NavigationBarItem(
                         selected = selectedDestination == destination.ordinal,
                         onClick = {
-                            navController.navigate(route = destination.route)
+                            navActions.navigateToTopLevel(destination)
                             selectedDestination = destination.ordinal
                         },
                         icon = { Icon(destination.icon, contentDescription = destination.label) },
@@ -51,6 +51,7 @@ fun WolframNavHost(modifier: Modifier = Modifier) {
                 }
             }
         }
+
         WolframTopLevelDestination.entries.forEach { destination ->
             composable(destination.route) {
                 when (destination) {

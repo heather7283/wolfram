@@ -19,6 +19,10 @@ enum class WolframTopLevelDestination(
 }
 
 class WolframNavigationActions(private val navController: NavHostController) {
+    fun navigateToTopLevel(dest: WolframTopLevelDestination) {
+        navController.navigate(dest.route)
+    }
+
     fun navigateToAddEditConfig(title: String, config: ConfigFile?) {
         var route = "addEditConfig/${title}"
         if (config != null) route += "?configName=${config.name}"
