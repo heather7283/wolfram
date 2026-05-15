@@ -3,8 +3,8 @@ package io.github.heather7283.wolfram.ui.configs
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.heather7283.wolfram.data.ConfigFilesRepository
 import io.github.heather7283.wolfram.data.ConfigFile
+import io.github.heather7283.wolfram.data.ConfigFilesRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch

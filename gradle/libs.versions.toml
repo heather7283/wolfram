@@ -17,6 +17,8 @@ cardviewV7 = "28.0.0"
 ksp = "2.3.2"
 timber = "5.0.1"
 arrow = "2.2.2.1"
+lifecycleProcess = "2.10.0"
+lifecycleRuntimeCompose = "2.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -45,6 +47,8 @@ hilt-ext-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hi
 cardview-v7 = { group = "com.android.support", name = "cardview-v7", version.ref = "cardviewV7" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
