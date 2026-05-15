@@ -2,6 +2,8 @@ package io.github.heather7283.wolfram.ui.addeditconfig
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -53,12 +55,13 @@ fun AddEditConfigScreen(
                 value = uiState.name,
                 onValueChange = { viewModel.updateName(it) },
                 singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
             )
             TextField(
                 value = uiState.content,
                 onValueChange = { viewModel.updateContent(it) },
                 singleLine = false,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).fillMaxWidth(),
             )
         }
     }
