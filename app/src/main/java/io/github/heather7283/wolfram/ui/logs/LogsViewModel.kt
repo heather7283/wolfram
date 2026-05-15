@@ -1,4 +1,4 @@
-package io.github.heather7283.wolfram.ui.dashboard
+package io.github.heather7283.wolfram.ui.logs
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
@@ -9,11 +9,19 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class DashboardViewModel @Inject constructor(
+class LogsViewModel @Inject constructor(
     private val vpnRepository: VpnRepository
 ) : ViewModel() {
-    val running = vpnRepository.running
+    val log = mutableStateListOf<String>()
 
-    fun startVpn() = vpnRepository.startVpn()
-    fun stopVpn() = vpnRepository.stopVpn()
+    init {
+        viewModelScope.launch {
+            vpnRepository.logs.collect { line ->
+                log.add(line)
+                if (log.size > 500) {
+                    log.removeAt(0)
+                }
+            }
+        }
+    }
 }

@@ -23,6 +23,7 @@ import io.github.heather7283.wolfram.ui.addeditconfig.AddEditConfigScreen
 import io.github.heather7283.wolfram.ui.configs.ConfigsScreen
 import io.github.heather7283.wolfram.ui.dashboard.DashboardScreen
 import io.github.heather7283.wolfram.ui.settings.SettingsScreen
+import io.github.heather7283.wolfram.ui.logs.LogsScreen
 
 @Composable
 fun WolframNavHost(modifier: Modifier = Modifier) {
@@ -56,6 +57,7 @@ fun WolframNavHost(modifier: Modifier = Modifier) {
             composable(destination.route) {
                 when (destination) {
                     WolframTopLevelDestination.DASHBOARD -> DashboardScreen(bar, navActions)
+                    WolframTopLevelDestination.LOGS -> LogsScreen(bar, navActions)
                     WolframTopLevelDestination.CONFIGS -> ConfigsScreen(bar, navActions)
                     WolframTopLevelDestination.SETTINGS -> SettingsScreen(bar, navActions)
                 }

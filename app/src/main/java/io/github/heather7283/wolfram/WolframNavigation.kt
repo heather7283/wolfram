@@ -3,6 +3,7 @@ package io.github.heather7283.wolfram
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
@@ -15,6 +16,7 @@ enum class WolframTopLevelDestination(
 ) {
     DASHBOARD("dashboard", Icons.Default.Dashboard, "Dashboard"),
     CONFIGS("configs", Icons.Default.Code, "Configs"),
+    LOGS("logs", Icons.Default.Notes, "Logs"),
     SETTINGS("settings", Icons.Default.Settings, "Settings"),
 }
 
