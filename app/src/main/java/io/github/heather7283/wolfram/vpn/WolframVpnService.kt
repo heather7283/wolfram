@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.Intent
 import android.net.VpnService
 import android.os.Binder
+import android.os.ParcelFileDescriptor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.core.app.NotificationCompat
@@ -31,7 +32,7 @@ import timber.log.Timber
 class WolframVpnService : VpnService() {
     private val binder = WolframVpnServiceBinder()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private var fakeProcess: Job? = null
+    private var process: Process? = null
 
     private val _running = MutableStateFlow(false)
     val running = _running.asStateFlow()
@@ -56,31 +57,36 @@ class WolframVpnService : VpnService() {
         Timber.d("onStartCommand action ${intent?.getStringExtra("action")}")
         intent?.getStringExtra("action").also {
             when (it) {
-                "start" -> startVpn()
+                "start" -> startVpn(intent?.getStringExtra("config")!!)
                 "stop" -> stopVpn()
                 else -> { Timber.e("Unknown action: $it") }
             }
         }
 
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
         Timber.d("onDestroy called")
-        fakeProcess?.cancel()
+        stopVpn()
         scope.cancel()
         super.onDestroy()
     }
 
-    fun startVpn() {
+    fun startVpn(config: String) {
         Timber.d("startVpn called")
         if (_running.value) {
             Timber.w("startVpn called when VPN is already running")
             return
         }
 
+        val tunFd = buildTunInterface()
+        if (tunFd == null) {
+            Timber.e("failed to build TUN interface")
+            return
+        }
+        launchCore(tunFd.detachFd(), config)
         startForeground(NOTIF_ID, buildNotification())
-        fakeProcess = scope.launch { startFakeProcess() }
     }
 
     fun stopVpn() {
@@ -90,9 +96,38 @@ class WolframVpnService : VpnService() {
             return
         }
 
-        fakeProcess?.cancel()
+        process?.destroy()
+        process = null
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+    }
+
+    private fun launchCore(fd: Int, config: String) {
+        val binary = applicationInfo.nativeLibraryDir + "/libxray.so"
+        process = ProcessBuilder(binary, "run", "--config", config)
+            .apply { environment()["XRAY_TUN_FD"] = fd.toString() }
+            .redirectErrorStream(true)
+            .start()
+        _running.update { true }
+
+        scope.launch {
+            process?.inputStream?.bufferedReader()?.lineSequence()?.forEach {
+                line -> _logs.emit(line)
+            }
+        }
+        scope.launch {
+            val rc = process?.waitFor() ?: -1
+            _running.update { false }
+            _logs.emit("[process exited with code $rc]")
+        }
+    }
+
+    private fun buildTunInterface(): ParcelFileDescriptor? {
+        return Builder()
+            .setSession("Wolfram")
+            .addAddress("10.20.30.1", 24)
+            .addRoute("0.0.0.0", 0)
+            .establish()
     }
 
     private fun buildNotification(): Notification {
@@ -102,29 +137,5 @@ class WolframVpnService : VpnService() {
             .setContentTitle("Wolfram VPN")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .build()
-    }
-
-    private suspend fun startFakeProcess() {
-        Timber.d("fakeProcess is starting!")
-        _running.update { true }
-
-        try {
-            var n = 0
-            while (n < 60) {
-                delay(1000)
-                Timber.d("fakeProcess is alive! n = $n")
-                _logs.emit("fake log from fakeProcess, n = $n")
-                n += 1
-            }
-
-            Timber.d("fakeProcess is exiting!")
-            _logs.emit("fakeProcess is exiting!")
-            _running.update { false }
-        } catch (e: CancellationException) {
-            Timber.d("fakeProcess was cancelled externally")
-            _logs.emit("fakeProcess was cancelled externally")
-            _running.update { false }
-            throw e
-        }
     }
 }

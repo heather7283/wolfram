@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.Packaging
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -49,6 +51,12 @@ android {
         compose = true
         // https://stackoverflow.com/a/76124393
         buildConfig = true
+    }
+    packaging {
+        jniLibs {
+            // otherwise libxray.so doesn't embed properly for whatever reason
+            useLegacyPackaging = true
+        }
     }
 }
 

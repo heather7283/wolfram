@@ -1,5 +1,10 @@
 package io.github.heather7283.wolfram.ui.dashboard
 
+import android.app.Activity
+import android.net.VpnService
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +25,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -33,13 +39,34 @@ fun DashboardScreen(
 ) {
     val viewModel: DashboardViewModel = hiltViewModel()
     val running = viewModel.running.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val vpnPermsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.startVpn()
+        }
+    }
 
     Scaffold(
         modifier = modifier,
         bottomBar = navBar,
         floatingActionButton = {
             FloatingActionButton(
-                { if (running.value) { viewModel.stopVpn() } else { viewModel.startVpn() } },
+                onClick = {
+                    if (running.value) {
+                        viewModel.stopVpn()
+                    } else {
+                        VpnService.prepare(context).also {
+                            if (it != null) {
+                                vpnPermsLauncher.launch(it)
+                            } else {
+                                viewModel.startVpn()
+                            }
+                        }
+                    }
+                },
                 shape = CircleShape,
             ) {
                 Icon(

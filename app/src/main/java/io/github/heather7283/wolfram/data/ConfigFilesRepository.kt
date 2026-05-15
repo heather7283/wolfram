@@ -37,6 +37,10 @@ class ConfigFilesRepository @Inject constructor(application: Application) {
             .toList()
     }
 
+    fun getConfigFiles(): List<ConfigFile> {
+        return _configs.value
+    }
+
     fun getConfigFilesFlow(): Flow<List<ConfigFile>> {
         return _configs.asStateFlow()
     }

@@ -1,12 +1,16 @@
 package io.github.heather7283.wolfram.vpn
 
+import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.net.VpnService
 import android.os.IBinder
+import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.github.heather7283.wolfram.data.ConfigFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,6 +25,8 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.io.path.name
+import kotlin.io.path.pathString
 
 @Singleton
 class VpnRepository @Inject constructor(
@@ -60,9 +66,9 @@ class VpnRepository @Inject constructor(
         }
     }
 
-    private fun getIntent(act: String? = null) = Intent(ctx, WolframVpnService::class.java).apply {
-        if (act != null) {
-            putExtra("action", act)
+    private fun getIntent(extra: Map<String, String> = emptyMap()): Intent {
+         return Intent(ctx, WolframVpnService::class.java).apply {
+             extra.forEach { (k, v) -> putExtra(k, v) }
         }
     }
 
@@ -78,13 +84,16 @@ class VpnRepository @Inject constructor(
         ctx.unbindService(connection)
     }
 
-    fun startVpn() {
-        Timber.d("startVpn called")
-        ContextCompat.startForegroundService(ctx, getIntent("start"))
+    fun startVpn(configFile: ConfigFile) {
+        Timber.d("startVpn called with configFile ${configFile.name} at ${configFile.path}")
+        ContextCompat.startForegroundService(ctx, getIntent(mapOf(
+            "action" to "start",
+            "config" to configFile.path.pathString,
+        )))
     }
 
     fun stopVpn() {
         Timber.d("stopVpn called")
-        ctx.startService(getIntent("stop"))
+        ctx.startService(getIntent(mapOf("action" to "stop")))
     }
 }
