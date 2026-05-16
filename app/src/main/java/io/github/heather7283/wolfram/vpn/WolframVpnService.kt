@@ -27,6 +27,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.io.InterruptedIOException
+import kotlin.io.path.Path
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
+import kotlin.io.path.pathString
+import kotlin.io.path.readSymbolicLink
 
 @AndroidEntryPoint
 class WolframVpnService : VpnService() {
@@ -85,7 +91,8 @@ class WolframVpnService : VpnService() {
             Timber.e("failed to build TUN interface")
             return
         }
-        launchCore(tunFd.detachFd(), config)
+
+        launchCore(tunFd, config)
         startForeground(NOTIF_ID, buildNotification())
     }
 
@@ -102,17 +109,25 @@ class WolframVpnService : VpnService() {
         stopSelf()
     }
 
-    private fun launchCore(fd: Int, config: String) {
+    private fun launchCore(fd: ParcelFileDescriptor, config: String) {
+        val wrapper = applicationInfo.nativeLibraryDir + "/libcoreWrapper.so"
         val binary = applicationInfo.nativeLibraryDir + "/libxray.so"
-        process = ProcessBuilder(binary, "run", "--config", config)
-            .apply { environment()["XRAY_TUN_FD"] = fd.toString() }
+        process = ProcessBuilder(wrapper, binary, "run", "--config", config)
             .redirectErrorStream(true)
             .start()
         _running.update { true }
 
+        if (!sendFd(fd.fd)) {
+            Timber.e("failed to send TUN fd to xray")
+        }
+
         scope.launch {
-            process?.inputStream?.bufferedReader()?.lineSequence()?.forEach {
-                line -> _logs.emit(line)
+            try {
+                process?.inputStream?.bufferedReader()?.lineSequence()?.forEach {
+                        line -> _logs.emit(line)
+                }
+            } catch (_: InterruptedIOException) {
+                // TODO: better way to do this?
             }
         }
         scope.launch {
@@ -127,6 +142,7 @@ class WolframVpnService : VpnService() {
             .setSession("Wolfram")
             .addAddress("10.20.30.1", 24)
             .addRoute("0.0.0.0", 0)
+            .addDisallowedApplication("io.github.heather7283.wolfram") // important loop protection
             .establish()
     }
 
@@ -137,5 +153,13 @@ class WolframVpnService : VpnService() {
             .setContentTitle("Wolfram VPN")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .build()
+    }
+
+    private external fun sendFd(fd: Int): Boolean
+
+    companion object {
+        init {
+            System.loadLibrary("wolfram")
+        }
     }
 }
