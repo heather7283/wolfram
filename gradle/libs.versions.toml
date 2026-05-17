@@ -19,6 +19,11 @@ timber = "5.0.1"
 arrow = "2.2.2.1"
 lifecycleProcess = "2.10.0"
 lifecycleRuntimeCompose = "2.10.0"
+roomCommonJvm = "2.8.4"
+roomRuntimeJvm = "2.8.4"
+roomCompiler = "2.8.4"
+roomKtx = "2.8.4"
+okhttp = "4.12.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -49,6 +54,9 @@ timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "tim
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
