@@ -102,3 +102,8 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 }
+
+// fixes the stupid duplicate classes nonsense, do not remove
+configurations.all {
+    exclude(group = "com.intellij", module = "annotations")
+}
