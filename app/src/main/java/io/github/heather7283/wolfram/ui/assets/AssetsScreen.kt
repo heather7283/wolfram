@@ -3,6 +3,7 @@ package io.github.heather7283.wolfram.ui.assets
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -91,11 +92,7 @@ fun AssetsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier,
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             if (geoFiles.isEmpty()) {
                 EmptyState(modifier = Modifier.align(Alignment.Center))
             } else {
@@ -108,18 +105,13 @@ fun AssetsScreen(
                     )
                 ) {
                     items(geoFiles, key = { it.name }) { geoFile ->
-                        AnimatedVisibility(
-                            visible = true,
-                            enter = fadeIn() + slideInVertically(),
-                        ) {
-                            GeoFileCard(
-                                geoFile = geoFile,
-                                isDownloading = geoFile.name in uiState.downloadingNames,
-                                onEdit = { viewModel.showEditDialog(geoFile) },
-                                onDelete = { viewModel.delete(geoFile) },
-                                onDownload = { viewModel.download(geoFile) },
-                            )
-                        }
+                        GeoFileCard(
+                            geoFile = geoFile,
+                            isDownloading = geoFile.name in uiState.downloadingNames,
+                            onEdit = { viewModel.showEditDialog(geoFile) },
+                            onDelete = { viewModel.delete(geoFile) },
+                            onDownload = { viewModel.download(geoFile) },
+                        )
                     }
                 }
             }
@@ -178,53 +170,34 @@ private fun GeoFileCard(
                 overflow = TextOverflow.Ellipsis,
             )
 
-            if (geoFile.existsLocally) {
-                Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    geoFile.size?.let { bytes ->
-                        MetaChip(label = "Size", value = formatBytes(bytes))
-                    }
-                    geoFile.lastUpdated?.let { date ->
-                        MetaChip(label = "Updated", value = formatDate(Date(date)))
-                    }
-                }
-            }
-
             Spacer(Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (isDownloading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                } else {
-                    IconButton(onClick = onDownload) {
-                        Icon(
-                            Icons.Default.Download,
-                            "Download",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
+            Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    if (geoFile.existsLocally) {
+                        MetaChip(label = "Size", value = formatBytes(geoFile.size!!))
+                        MetaChip(label = "Updated", value = formatDate(Date(geoFile.lastUpdated!!)))
+                    } else {
+                        Text("Not downloaded")
                     }
                 }
 
-                Spacer(Modifier.width(4.dp))
+                Spacer(modifier = Modifier.weight(1f))
 
-                IconButton(onClick = onEdit) {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = "Edit",
-                        tint = MaterialTheme.colorScheme.secondary,
-                    )
-                }
-
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.error,
-                    )
+                Row(horizontalArrangement = Arrangement.End) {
+                    IconButton(onClick = onDownload, enabled = !isDownloading) {
+                        if (isDownloading) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        } else {
+                            Icon(Icons.Default.Download, "Download")
+                        }
+                    }
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    }
                 }
             }
         }
