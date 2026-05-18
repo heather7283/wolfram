@@ -23,8 +23,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.InterruptedIOException
-import java.nio.file.Path
-import kotlin.io.path.pathString
 
 @AndroidEntryPoint
 class WolframVpnService : VpnService() {

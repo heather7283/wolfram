@@ -4,11 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverter
-import androidx.room.TypeConverters
 import io.github.heather7283.wolfram.data.geofile.GeoFile
 import io.github.heather7283.wolfram.data.geofile.GeoFileDao
-import java.sql.Date
 
 @Database(entities=[GeoFile::class], version=1, exportSchema=false)
 abstract class WolframDatabase : RoomDatabase() {
