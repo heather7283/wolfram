@@ -32,4 +32,8 @@ add_library(${CMAKE_PROJECT_NAME} SHARED wolfram.c)
 # build script, prebuilt third-party libraries, or Android system libraries.
 target_link_libraries(${CMAKE_PROJECT_NAME} android log)
 
-add_executable(coreWrapper coreWrapper.c)
+# This is not a library but an executable whose purpose is to receive tun fd
+# from the main process over a unix socket and pass it to xray-core. It is named
+# like this simply because the build system automatically packages all files
+# following the lib*.so naming into resulting APK, making my life much easier
+add_executable(libxray-wrapper.so xray_wrapper.c)

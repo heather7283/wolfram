@@ -103,7 +103,7 @@ class WolframVpnService : VpnService() {
     }
 
     private fun launchCore(fd: ParcelFileDescriptor, config: String, assetsDir: String) {
-        val wrapper = applicationInfo.nativeLibraryDir + "/libcoreWrapper.so"
+        val wrapper = applicationInfo.nativeLibraryDir + "/libxray-wrapper.so"
         val binary = applicationInfo.nativeLibraryDir + "/libxray.so"
         process = ProcessBuilder(wrapper, binary, "run", "--config", config)
             .also { it.environment()["XRAY_LOCATION_ASSET"] = assetsDir }
