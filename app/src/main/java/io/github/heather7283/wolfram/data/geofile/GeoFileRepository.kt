@@ -1,6 +1,6 @@
 package io.github.heather7283.wolfram.data.geofile
 
-import android.content.Context
+import android.app.Application
 import arrow.core.Either
 import io.github.heather7283.wolfram.data.WolframDatabase
 import kotlinx.coroutines.Dispatchers
@@ -10,6 +10,7 @@ import okhttp3.Request
 import okio.IOException
 import okio.use
 import java.nio.file.Files
+import java.nio.file.Path
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,11 +18,11 @@ import kotlin.io.path.fileSize
 import kotlin.io.path.outputStream
 
 @Singleton
-class GeoFileRepository @Inject constructor(ctx: Context) {
-    private val dao = WolframDatabase.getInstance(ctx).geoFileDao()
+class GeoFileRepository @Inject constructor(app: Application) {
+    private val dao = WolframDatabase.getInstance(app.applicationContext).geoFileDao()
     private val http = OkHttpClient()
 
-    private val geoFilesDir = ctx.filesDir.toPath().resolve("geofiles").also {
+    val geoFilesDir: Path = app.filesDir.toPath().resolve("geofiles").also {
         Files.createDirectories(it)
     }
     private fun pathFor(name: String) = geoFilesDir.resolve(name)
@@ -62,7 +63,7 @@ class GeoFileRepository @Inject constructor(ctx: Context) {
 
             dao.update(gf.copy(
                 existsLocally = true,
-                lastUpdated = Date(),
+                lastUpdated = Date().time,
                 size = targetFile.fileSize(),
             ))
         }

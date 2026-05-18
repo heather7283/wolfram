@@ -9,6 +9,8 @@ data class GeoFile(
     @PrimaryKey val name: String,
     val url: String,
     val existsLocally: Boolean,
-    val lastUpdated: Date?,
+    // I couldn't get TypeConverter nonsense to work
+    // so I'm just gonna use Long instead of Date here
+    val lastUpdated: Long?,
     val size: Long?,
 )

@@ -7,19 +7,14 @@ import android.content.Intent
 import android.net.VpnService
 import android.os.Binder
 import android.os.ParcelFileDescriptor
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.VpnKey
 import androidx.core.app.NotificationCompat
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.heather7283.wolfram.R
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -28,11 +23,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.InterruptedIOException
-import kotlin.io.path.Path
-import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.name
+import java.nio.file.Path
 import kotlin.io.path.pathString
-import kotlin.io.path.readSymbolicLink
 
 @AndroidEntryPoint
 class WolframVpnService : VpnService() {
@@ -63,7 +55,10 @@ class WolframVpnService : VpnService() {
         Timber.d("onStartCommand action ${intent?.getStringExtra("action")}")
         intent?.getStringExtra("action").also {
             when (it) {
-                "start" -> startVpn(intent?.getStringExtra("config")!!)
+                "start" -> startVpn(
+                    intent?.getStringExtra("config")!!,
+                    intent?.getStringExtra("assetsDir")!!,
+                )
                 "stop" -> stopVpn()
                 else -> { Timber.e("Unknown action: $it") }
             }
@@ -79,7 +74,7 @@ class WolframVpnService : VpnService() {
         super.onDestroy()
     }
 
-    fun startVpn(config: String) {
+    fun startVpn(config: String, assetsDir: String) {
         Timber.d("startVpn called")
         if (_running.value) {
             Timber.w("startVpn called when VPN is already running")
@@ -92,7 +87,7 @@ class WolframVpnService : VpnService() {
             return
         }
 
-        launchCore(tunFd, config)
+        launchCore(tunFd, config, assetsDir)
         startForeground(NOTIF_ID, buildNotification())
     }
 
@@ -109,10 +104,11 @@ class WolframVpnService : VpnService() {
         stopSelf()
     }
 
-    private fun launchCore(fd: ParcelFileDescriptor, config: String) {
+    private fun launchCore(fd: ParcelFileDescriptor, config: String, assetsDir: String) {
         val wrapper = applicationInfo.nativeLibraryDir + "/libcoreWrapper.so"
         val binary = applicationInfo.nativeLibraryDir + "/libxray.so"
         process = ProcessBuilder(wrapper, binary, "run", "--config", config)
+            .also { it.environment()["XRAY_LOCATION_ASSET"] = assetsDir }
             .redirectErrorStream(true)
             .start()
         _running.update { true }

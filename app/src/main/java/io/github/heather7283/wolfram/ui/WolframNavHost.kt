@@ -20,10 +20,11 @@ import androidx.navigation.navArgument
 import io.github.heather7283.wolfram.WolframNavigationActions
 import io.github.heather7283.wolfram.WolframTopLevelDestination
 import io.github.heather7283.wolfram.ui.addeditconfig.AddEditConfigScreen
+import io.github.heather7283.wolfram.ui.assets.AssetsScreen
 import io.github.heather7283.wolfram.ui.configs.ConfigsScreen
 import io.github.heather7283.wolfram.ui.dashboard.DashboardScreen
-import io.github.heather7283.wolfram.ui.settings.SettingsScreen
 import io.github.heather7283.wolfram.ui.logs.LogsScreen
+import io.github.heather7283.wolfram.ui.settings.SettingsScreen
 
 @Composable
 fun WolframNavHost(modifier: Modifier = Modifier) {
@@ -60,6 +61,7 @@ fun WolframNavHost(modifier: Modifier = Modifier) {
                     WolframTopLevelDestination.LOGS -> LogsScreen(bar, navActions)
                     WolframTopLevelDestination.CONFIGS -> ConfigsScreen(bar, navActions)
                     WolframTopLevelDestination.SETTINGS -> SettingsScreen(bar, navActions)
+                    WolframTopLevelDestination.ASSETS -> AssetsScreen(bar, navActions)
                 }
             }
         }

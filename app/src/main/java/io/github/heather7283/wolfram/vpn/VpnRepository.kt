@@ -1,13 +1,10 @@
 package io.github.heather7283.wolfram.vpn
 
-import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.net.VpnService
 import android.os.IBinder
-import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.heather7283.wolfram.data.ConfigFile
@@ -15,7 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -23,9 +19,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.nio.file.Path
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.io.path.name
 import kotlin.io.path.pathString
 
 @Singleton
@@ -84,11 +80,12 @@ class VpnRepository @Inject constructor(
         ctx.unbindService(connection)
     }
 
-    fun startVpn(configFile: ConfigFile) {
+    fun startVpn(configFile: ConfigFile, assetsDir: Path) {
         Timber.d("startVpn called with configFile ${configFile.name} at ${configFile.path}")
         ContextCompat.startForegroundService(ctx, getIntent(mapOf(
             "action" to "start",
             "config" to configFile.path.pathString,
+            "assetsDir" to assetsDir.pathString,
         )))
     }
 
