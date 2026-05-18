@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 sealed interface DialogState {
@@ -37,8 +38,6 @@ class GeoFileViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(GeoFileUiState())
     val uiState: StateFlow<GeoFileUiState> = _uiState.asStateFlow()
 
-    // ── Dialog control ──────────────────────────────────────────────────────
-
     fun showAddDialog() {
         _uiState.update { it.copy(dialog = DialogState.Add) }
     }
@@ -55,11 +54,10 @@ class GeoFileViewModel @Inject constructor(
         _uiState.update { it.copy(errorMessage = null) }
     }
 
-    // ── Actions ─────────────────────────────────────────────────────────────
-
     fun add(name: String, url: String) {
         viewModelScope.launch {
             repo.add(name.trim(), url.trim()).onLeft { err ->
+                Timber.e(err)
                 _uiState.update { it.copy(errorMessage = err.message ?: "Failed to add geo file") }
             }
         }
@@ -69,6 +67,7 @@ class GeoFileViewModel @Inject constructor(
     fun edit(old: GeoFile, name: String, url: String) {
         viewModelScope.launch {
             repo.modify(old, name.trim(), url.trim()).onLeft { err ->
+                Timber.e(err)
                 _uiState.update { it.copy(errorMessage = err.message ?: "Failed to edit geo file") }
             }
         }
@@ -81,6 +80,7 @@ class GeoFileViewModel @Inject constructor(
         viewModelScope.launch {
             repo.download(geoFile)
                 .onLeft { err ->
+                    Timber.e(err)
                     _uiState.update {
                         it.copy(errorMessage = err.message ?: "Download failed for ${geoFile.name}")
                     }
@@ -92,6 +92,7 @@ class GeoFileViewModel @Inject constructor(
     fun delete(geoFile: GeoFile) {
         viewModelScope.launch {
             repo.delete(geoFile).onLeft { err ->
+                Timber.e(err)
                 _uiState.update { it.copy(errorMessage = err.message ?: "Failed to delete geo file") }
             }
         }
