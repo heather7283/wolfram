@@ -101,6 +101,7 @@ dependencies {
     implementation(libs.hilt.android.core)
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
+    ksp(libs.androidx.room.compiler)
 }
 
 // fixes the stupid duplicate classes nonsense, do not remove
