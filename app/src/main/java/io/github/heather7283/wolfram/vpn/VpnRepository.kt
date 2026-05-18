@@ -10,6 +10,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.heather7283.wolfram.data.ConfigFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -80,8 +81,10 @@ class VpnRepository @Inject constructor(
         ctx.unbindService(connection)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun startVpn(configFile: ConfigFile, assetsDir: Path) {
         Timber.d("startVpn called with configFile ${configFile.name} at ${configFile.path}")
+        _logs.resetReplayCache()
         ContextCompat.startForegroundService(ctx, getIntent(mapOf(
             "action" to "start",
             "config" to configFile.path.pathString,
