@@ -11,6 +11,7 @@ import okio.IOException
 import okio.use
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -52,10 +53,10 @@ class GeoFileRepository @Inject constructor(app: Application) {
                     if (!response.isSuccessful) {
                         throw IOException("Got HTTP ${response.code} for ${gf.url}")
                     }
-                    val body = response.body ?: throw IOException("Empty response for ${gf.url}")
+                    val body = response.body
                     tempFile.outputStream().use { body.byteStream().copyTo(it) }
                 }
-                Files.move(tempFile, targetFile)
+                Files.move(tempFile, targetFile, StandardCopyOption.REPLACE_EXISTING)
             } catch (e: Exception) {
                 Files.deleteIfExists(tempFile)
                 throw e
