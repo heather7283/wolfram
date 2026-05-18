@@ -7,19 +7,25 @@
 #include <unistd.h>
 #include <assert.h>
 
-#include "common.h"
+static socklen_t mkaddr(struct sockaddr_un *addr, const char *name) {
+    memset(addr, 0, sizeof(*addr));
+    addr->sun_family = AF_UNIX;
+    strncpy(addr->sun_path + 1, name, sizeof(addr->sun_path) - 2);
+
+    return (socklen_t)(offsetof(struct sockaddr_un, sun_path) + 1 + strlen(name));
+}
 
 static int get_fd(const char *socket_path) {
     int fd = -1;
 
-    int sock = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock < 0) {
         perror("could not create socket");
         goto out;
     }
 
     struct sockaddr_un addr;
-    socklen_t addr_len = make_abstract_addr(&addr, socket_path);
+    socklen_t addr_len = mkaddr(&addr, socket_path);
     if (connect(sock, (const struct sockaddr *)&addr, addr_len) < 0) {
         perror("could not connect to socket");
         goto out;
@@ -38,8 +44,12 @@ static int get_fd(const char *socket_path) {
         .msg_controllen = sizeof(cmsg_buf),
     };
 
-    if (recvmsg(sock, &msg, 0) <= 0) {
+    ssize_t msglen = recvmsg(sock, &msg, 0);
+    if (msglen < 0) {
         perror("could not receive message");
+        goto out;
+    } else if (msglen == 0) {
+        fprintf(stderr, "received message of length 0\n");
         goto out;
     }
 
@@ -59,13 +69,10 @@ out:
 }
 
 int main(int _, char **argv) {
-    char **core_argv = &argv[1];
+    const char *sock_name = argv[1];
+    char **core_argv = &argv[2];
 
-    // TODO: extremely ugly hack, do something about it (when I get this whole contraption working)
-    int fd = -1;
-    for (int retries = 5; fd < 0 && retries--; sleep(1)) {
-        fd = get_fd(WOLFRAM_SOCKET_NAME);
-    }
+    int fd = get_fd(sock_name);
     if (fd < 0) {
         fprintf(stderr, "failed to receive tun fd\n");
         return 1;

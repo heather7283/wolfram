@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
+import android.net.LocalServerSocket
 import android.net.VpnService
 import android.os.Binder
 import android.os.ParcelFileDescriptor
@@ -102,26 +103,49 @@ class WolframVpnService : VpnService() {
         stopSelf()
     }
 
-    private fun launchCore(fd: ParcelFileDescriptor, config: String, assetsDir: String) {
+    private fun launchCore(tunFd: ParcelFileDescriptor, config: String, assetsDir: String) {
+        val sockName = "io.github.heather7283.wolfram.sock"
+        val sock = LocalServerSocket(sockName)
+
         val wrapper = applicationInfo.nativeLibraryDir + "/libxray-wrapper.so"
         val binary = applicationInfo.nativeLibraryDir + "/libxray.so"
-        process = ProcessBuilder(wrapper, binary, "run", "--config", config)
-            .also { it.environment()["XRAY_LOCATION_ASSET"] = assetsDir }
-            .redirectErrorStream(true)
-            .start()
-        _running.update { true }
 
-        if (!sendFd(fd.fd)) {
-            Timber.e("failed to send TUN fd to xray")
+        try {
+            process = ProcessBuilder(wrapper, sockName, binary, "run", "--config", config)
+                .apply { environment()["XRAY_LOCATION_ASSET"] = assetsDir }
+                .redirectErrorStream(true)
+                .start()
+            _running.update { true }
+        } catch (e: Exception) {
+            Timber.e(e, "failed to start child process")
+            sock.close()
+            return
         }
 
         scope.launch {
             try {
+                sock.use { server ->
+                    server.accept().use { client ->
+                        client.setFileDescriptorsForSend(arrayOf(tunFd.fileDescriptor))
+                        client.outputStream.apply {
+                            write(67)
+                            flush()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "failed to send tun fd to child")
+            } finally {
+                tunFd.close()
+            }
+        }
+        scope.launch {
+            try {
                 process?.inputStream?.bufferedReader()?.lineSequence()?.forEach {
-                        line -> _logs.emit(line)
+                    line -> _logs.emit(line)
                 }
             } catch (_: InterruptedIOException) {
-                // TODO: better way to do this?
+                // this is fine
             }
         }
         scope.launch {
@@ -147,13 +171,5 @@ class WolframVpnService : VpnService() {
             .setContentTitle("Wolfram VPN")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .build()
-    }
-
-    private external fun sendFd(fd: Int): Boolean
-
-    companion object {
-        init {
-            System.loadLibrary("wolfram")
-        }
     }
 }

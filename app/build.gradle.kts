@@ -24,7 +24,7 @@ android {
 
     defaultConfig {
         applicationId = "io.github.heather7283.wolfram"
-        minSdk = 26
+        minSdk = 28
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
