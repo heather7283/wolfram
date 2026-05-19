@@ -24,6 +24,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.InterruptedIOException
+import kotlin.io.bufferedWriter
+import kotlin.io.path.Path
+import kotlin.io.path.bufferedReader
+import kotlin.io.path.bufferedWriter
 
 @AndroidEntryPoint
 class WolframVpnService : VpnService() {
@@ -111,7 +115,7 @@ class WolframVpnService : VpnService() {
         val binary = applicationInfo.nativeLibraryDir + "/libxray.so"
 
         try {
-            process = ProcessBuilder(wrapper, sockName, binary, "run", "--config", config)
+            process = ProcessBuilder(wrapper, sockName, binary, "run")
                 .apply { environment()["XRAY_LOCATION_ASSET"] = assetsDir }
                 .redirectErrorStream(true)
                 .start()
@@ -122,6 +126,18 @@ class WolframVpnService : VpnService() {
             return
         }
 
+        scope.launch {
+            try {
+                process?.outputStream?.bufferedWriter()?.use { writer ->
+                    Path(config).bufferedReader().use { reader ->
+                        reader.copyTo(writer)
+                        writer.flush()
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "failed to feed config to xray")
+            }
+        }
         scope.launch {
             try {
                 sock.use { server ->
