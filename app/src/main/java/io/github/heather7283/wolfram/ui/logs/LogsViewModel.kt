@@ -4,19 +4,19 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.heather7283.wolfram.vpn.VpnRepository
+import io.github.heather7283.wolfram.vpn.XrayRepository
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class LogsViewModel @Inject constructor(
-    private val vpnRepository: VpnRepository
+    private val xrayRepository: XrayRepository
 ) : ViewModel() {
     val log = mutableStateListOf<String>()
 
     init {
         viewModelScope.launch {
-            vpnRepository.logs.collect { line ->
+            xrayRepository.logs.collect { line ->
                 log.add(line)
                 if (log.size > 500) {
                     log.removeAt(0)

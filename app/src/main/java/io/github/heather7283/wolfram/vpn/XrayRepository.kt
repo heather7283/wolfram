@@ -26,7 +26,7 @@ import javax.inject.Singleton
 import kotlin.io.path.pathString
 
 @Singleton
-class VpnRepository @Inject constructor(
+class XrayRepository @Inject constructor(
     @ApplicationContext private val ctx: Context
 ) {
     private var service: WolframVpnService? = null
