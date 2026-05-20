@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import io.github.heather7283.wolfram.data.geofile.GeoFile
 import io.github.heather7283.wolfram.data.geofile.GeoFileDao
 
-@Database(entities=[GeoFile::class], version=1, exportSchema=false)
+@Database(entities=[GeoFile::class], version=1)
 abstract class WolframDatabase : RoomDatabase() {
     abstract fun geoFileDao(): GeoFileDao
 
