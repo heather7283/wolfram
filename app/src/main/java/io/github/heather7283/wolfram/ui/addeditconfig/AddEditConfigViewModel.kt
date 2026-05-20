@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.heather7283.wolfram.data.ConfigFilesRepository
+import io.github.heather7283.wolfram.data.xrayconfig.XrayConfigRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -21,7 +21,7 @@ data class AddEditConfigUiState(
 
 @HiltViewModel
 class AddEditConfigViewModel @Inject constructor(
-    private val configFilesRepository: ConfigFilesRepository,
+    private val xrayConfigRepository: XrayConfigRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val configName: String? = savedStateHandle["configName"]
@@ -38,10 +38,10 @@ class AddEditConfigViewModel @Inject constructor(
     private fun loadConfig(configName: String) {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            configFilesRepository.getConfigFile(configName).onLeft { e ->
+            xrayConfigRepository.getConfigFile(configName).onLeft { e ->
                 Timber.e(e)
             }.onRight { config ->
-                configFilesRepository.getConfigFileText(config).onLeft { e ->
+                xrayConfigRepository.getConfigFileText(config).onLeft { e ->
                     Timber.e(e)
                 }.onRight { content ->
                     _uiState.update { state ->
@@ -54,7 +54,7 @@ class AddEditConfigViewModel @Inject constructor(
 
     fun saveConfig() {
         viewModelScope.launch {
-            configFilesRepository.saveOrUpdateConfigFile(_uiState.value.name, _uiState.value.content).onLeft { e ->
+            xrayConfigRepository.saveOrUpdateConfigFile(_uiState.value.name, _uiState.value.content).onLeft { e ->
                 Timber.e(e)
             }.onRight {
                 _uiState.update { state -> state.copy(isModified = false) }

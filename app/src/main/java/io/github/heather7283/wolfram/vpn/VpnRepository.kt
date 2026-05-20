@@ -7,7 +7,7 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.github.heather7283.wolfram.data.ConfigFile
+import io.github.heather7283.wolfram.data.xrayconfig.XrayConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -82,12 +82,12 @@ class VpnRepository @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun startVpn(configFile: ConfigFile, assetsDir: Path) {
-        Timber.d("startVpn called with configFile ${configFile.name} at ${configFile.path}")
+    fun startVpn(xrayConfig: XrayConfig, assetsDir: Path) {
+        Timber.d("startVpn called with configFile ${xrayConfig.name} at ${xrayConfig.path}")
         _logs.resetReplayCache()
         ContextCompat.startForegroundService(ctx, getIntent(mapOf(
             "action" to "start",
-            "config" to configFile.path.pathString,
+            "config" to xrayConfig.path.pathString,
             "assetsDir" to assetsDir.pathString,
         )))
     }

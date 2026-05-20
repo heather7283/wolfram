@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
-import io.github.heather7283.wolfram.data.ConfigFile
+import io.github.heather7283.wolfram.data.xrayconfig.XrayConfig
 
 enum class WolframTopLevelDestination(
     val route: String,
@@ -27,7 +27,7 @@ class WolframNavigationActions(private val navController: NavHostController) {
         navController.navigate(dest.route)
     }
 
-    fun navigateToAddEditConfig(title: String, config: ConfigFile?) {
+    fun navigateToAddEditConfig(title: String, config: XrayConfig?) {
         var route = "addEditConfig/${title}"
         if (config != null) route += "?configName=${config.name}"
         navController.navigate(route)
