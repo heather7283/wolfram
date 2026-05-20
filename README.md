@@ -13,4 +13,3 @@ Proxy client for android based on [Xray-core].
 - https://github.com/android/snippets
 
 [Xray-core]: https://github.com/XTLS/Xray-core
-
