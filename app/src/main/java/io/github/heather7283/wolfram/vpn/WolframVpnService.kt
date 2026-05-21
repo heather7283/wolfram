@@ -9,6 +9,8 @@ import android.net.VpnService
 import android.os.Binder
 import android.os.ParcelFileDescriptor
 import androidx.core.app.NotificationCompat
+import arrow.core.Either
+import arrow.core.flatMap
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.heather7283.wolfram.R
 import kotlinx.coroutines.CoroutineScope
@@ -16,18 +18,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import timber.log.Timber
+import java.io.IOException
 import java.io.InterruptedIOException
+import java.util.Collections.emptyMap
 import kotlin.io.bufferedWriter
 import kotlin.io.path.Path
 import kotlin.io.path.bufferedReader
 import kotlin.io.path.bufferedWriter
+import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
 class WolframVpnService : VpnService() {
@@ -43,6 +51,10 @@ class WolframVpnService : VpnService() {
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     val logs = _logs.asSharedFlow()
+
+    private val _stats: MutableStateFlow<Either<Throwable, XrayStats>> =
+        MutableStateFlow(Either.Right(XrayStats(emptyMap(), emptyMap())))
+    val stats = _stats.asStateFlow()
 
     private val NOTIF_ID = 67;
 
@@ -154,6 +166,40 @@ class WolframVpnService : VpnService() {
             } finally {
                 tunFd.close()
             }
+        }
+
+        scope.launch {
+            val http = OkHttpClient.Builder()
+                .callTimeout(1.seconds)
+                .build()
+
+            do {
+                delay(5.seconds) // TODO: configurable
+
+                _stats.update {
+                    Either.catch {
+                        val req = Request.Builder()
+                            .url("http://127.0.0.1:54321/debug/vars") // TODO: configurable
+                            .build()
+
+                        http.newCall(req).execute().use { resp ->
+                            if (!resp.isSuccessful) {
+                                throw IOException("HTTP ${resp.code}")
+                            }
+                            resp.body.use { it.string() }
+                        }
+                    }.flatMap { body ->
+                        // TODO: use grpc instead, should be more efficient? not like it matters
+                        parseXrayStats(body)
+                    }
+                }
+
+                _stats.value.onLeft {
+                    Timber.e(it, "could not fetch stats")
+                }.onRight {
+                    Timber.d("stats: ${it}")
+                }
+            } while (_running.value)
         }
         scope.launch {
             try {
