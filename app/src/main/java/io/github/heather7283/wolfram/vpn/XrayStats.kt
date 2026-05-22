@@ -14,8 +14,8 @@ typealias XrayInOutStat = Map<String, XrayUpDownStat>
 
 @Serializable
 data class XrayStats(
-    val inbound: XrayInOutStat,
-    val outbound: XrayInOutStat,
+    val inbound: XrayInOutStat = emptyMap(),
+    val outbound: XrayInOutStat = emptyMap(),
 ) {
 }
 

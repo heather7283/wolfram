@@ -14,6 +14,7 @@ class DashboardViewModel @Inject constructor(
     private val geoFileRepository: GeoFileRepository,
 ) : ViewModel() {
     val running = xrayRepository.running
+    val stats = xrayRepository.stats
 
     // TODO: check and select
     fun startVpn() = xrayRepository.startVpn(

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.core.content.ContextCompat
+import arrow.core.Either
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.heather7283.wolfram.data.xrayconfig.XrayConfig
 import kotlinx.coroutines.CoroutineScope
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -37,6 +39,9 @@ class XrayRepository @Inject constructor(
     private val _logs = MutableSharedFlow<String>(replay = 100)
     val logs = _logs.asSharedFlow()
 
+    private val _stats = MutableStateFlow<Either<Throwable, XrayStats>>(Either.Right(XrayStats()))
+    val stats = _stats.asStateFlow()
+
     private var mirrorJobs: List<Job> = emptyList()
     private val connectionScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val connection = object : ServiceConnection {
@@ -52,6 +57,9 @@ class XrayRepository @Inject constructor(
                 connectionScope.launch {
                     service?.logs?.collect { l -> _logs.emit(l) }
                 },
+                connectionScope.launch {
+                    service?.apply { stats.collect { _stats.emit(it) } }
+                }
             )
         }
 
