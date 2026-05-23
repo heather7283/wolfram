@@ -49,7 +49,7 @@ class XrayConfigRepository @Inject constructor(application: Application) {
         _configs.update { loadConfigFiles() }
     }
 
-    fun saveOrUpdateConfigFile(name: String, text: String) = Either.Companion.catch {
+    fun saveOrUpdateConfigFile(name: String, text: String) = Either.catch {
         require(validNameRegex.matchEntire(name) != null) { "Invalid config name" }
 
         val newConfig = XrayConfig(name, configFilesDir / "${name}.jsonc")
@@ -62,18 +62,18 @@ class XrayConfigRepository @Inject constructor(application: Application) {
         newConfig
     }
 
-    fun deleteConfigFile(config: XrayConfig) = Either.Companion.catch {
+    fun deleteConfigFile(config: XrayConfig) = Either.catch {
         config.path.deleteExisting()
         _configs.update { current -> current.filter { it.name != config.name } }
     }
 
-    fun getConfigFile(name: String) = Either.Companion.catch {
+    fun getConfigFile(name: String) = Either.catch {
         val jsonPath = configFilesDir / "${name}.jsonc"
         check(jsonPath.exists()) { "Config $name does not exist" }
         XrayConfig(name, jsonPath)
     }
 
-    fun getConfigFileText(config: XrayConfig) = Either.Companion.catch {
+    fun getConfigFileText(config: XrayConfig) = Either.catch {
         config.path.readText()
     }
 }
