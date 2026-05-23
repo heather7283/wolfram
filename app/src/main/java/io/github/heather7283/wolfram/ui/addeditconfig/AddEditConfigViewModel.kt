@@ -15,7 +15,6 @@ import javax.inject.Inject
 data class AddEditConfigUiState(
     val name: String = "",
     val content: String = "",
-    val isLoading: Boolean = false,
     val isModified: Boolean = false,
 )
 
@@ -24,29 +23,26 @@ class AddEditConfigViewModel @Inject constructor(
     private val xrayConfigRepository: XrayConfigRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
-    private val configName: String? = savedStateHandle["configName"]
+    private var id: Long? = savedStateHandle.get<Long?>("configId").let {
+        if (it == null || it < 0) { null } else { it }
+    }
 
     private val _uiState = MutableStateFlow(AddEditConfigUiState())
     val uiState = _uiState.asStateFlow()
 
     init {
-        if (configName != null) {
-            loadConfig(configName)
+        if (id != null) {
+            loadConfig(id!!)
         }
     }
 
-    private fun loadConfig(configName: String) {
-        _uiState.update { it.copy(isLoading = true) }
+    private fun loadConfig(id: Long) {
         viewModelScope.launch {
-            xrayConfigRepository.getConfigFile(configName).onLeft { e ->
-                Timber.e(e)
+            xrayConfigRepository.getById(id).onLeft { e ->
+                Timber.e(e, "could not get config with id ${id}")
             }.onRight { config ->
-                xrayConfigRepository.getConfigFileText(config).onLeft { e ->
-                    Timber.e(e)
-                }.onRight { content ->
-                    _uiState.update { state ->
-                        state.copy(name = config.name, content = content, isLoading = false)
-                    }
+                _uiState.update { state ->
+                    state.copy(name = config.name, content = config.text)
                 }
             }
         }
@@ -54,10 +50,22 @@ class AddEditConfigViewModel @Inject constructor(
 
     fun saveConfig() {
         viewModelScope.launch {
-            xrayConfigRepository.saveOrUpdateConfigFile(_uiState.value.name, _uiState.value.content).onLeft { e ->
-                Timber.e(e)
-            }.onRight {
-                _uiState.update { state -> state.copy(isModified = false) }
+            val name = _uiState.value.name
+            val text = _uiState.value.content
+
+            if (id == null) {
+                xrayConfigRepository.create(name, text).onLeft {
+                    Timber.e(it, "failed to create config")
+                }.onRight {
+                    id = it
+                    _uiState.update { it.copy(isModified = false) }
+                }
+            } else {
+                xrayConfigRepository.update(id!!, name, text).onLeft {
+                    Timber.e(it, "failed to save config")
+                }.onRight {
+                    _uiState.update { it.copy(isModified = false) }
+                }
             }
         }
     }

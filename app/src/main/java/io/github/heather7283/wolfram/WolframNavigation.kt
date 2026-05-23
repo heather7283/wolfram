@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
-import io.github.heather7283.wolfram.data.xrayconfig.XrayConfig
+import io.github.heather7283.wolfram.data.xrayconfig.XrayConfigData
 
 enum class WolframTopLevelDestination(
     val route: String,
@@ -27,9 +27,8 @@ class WolframNavigationActions(private val navController: NavHostController) {
         navController.navigate(dest.route)
     }
 
-    fun navigateToAddEditConfig(title: String, config: XrayConfig?) {
-        var route = "addEditConfig/${title}"
-        if (config != null) route += "?configName=${config.name}"
-        navController.navigate(route)
+    fun navigateToAddEditConfig(title: String, config: XrayConfigData?) {
+        // java.lang.IllegalArgumentException: long does not allow nullable values :/
+        navController.navigate("addEditConfig/${title}?configId=${config?.id ?: -228}")
     }
 }

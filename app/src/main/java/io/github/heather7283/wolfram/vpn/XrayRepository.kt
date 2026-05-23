@@ -8,7 +8,6 @@ import android.os.IBinder
 import androidx.core.content.ContextCompat
 import arrow.core.Either
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.github.heather7283.wolfram.data.xrayconfig.XrayConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -90,14 +89,9 @@ class XrayRepository @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun startVpn(xrayConfig: XrayConfig, assetsDir: Path) {
-        Timber.d("startVpn called with configFile ${xrayConfig.name} at ${xrayConfig.path}")
+    fun startVpn() {
         _logs.resetReplayCache()
-        ContextCompat.startForegroundService(ctx, getIntent(mapOf(
-            "action" to "start",
-            "config" to xrayConfig.path.pathString,
-            "assetsDir" to assetsDir.pathString,
-        )))
+        ContextCompat.startForegroundService(ctx, getIntent(mapOf("action" to "start")))
     }
 
     fun stopVpn() {

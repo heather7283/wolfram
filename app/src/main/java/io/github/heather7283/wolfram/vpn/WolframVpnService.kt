@@ -13,7 +13,9 @@ import arrow.core.Either
 import arrow.core.flatMap
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.heather7283.wolfram.R
+import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
+import io.github.heather7283.wolfram.data.xrayconfig.XrayConfigRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,12 +40,14 @@ import kotlin.io.bufferedWriter
 import kotlin.io.path.Path
 import kotlin.io.path.bufferedReader
 import kotlin.io.path.bufferedWriter
+import kotlin.io.path.pathString
 import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
 class WolframVpnService : VpnService() {
-    @Inject
-    lateinit var settingsRepository: SettingsRepository
+    @Inject lateinit var settingsRepository: SettingsRepository
+    @Inject lateinit var geoFileRepository: GeoFileRepository
+    @Inject lateinit var xrayConfigRepository: XrayConfigRepository
 
     private val binder = WolframVpnServiceBinder()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -76,10 +80,7 @@ class WolframVpnService : VpnService() {
         Timber.d("onStartCommand action ${intent?.getStringExtra("action")}")
         intent?.getStringExtra("action").also {
             when (it) {
-                "start" -> startVpn(
-                    intent?.getStringExtra("config")!!,
-                    intent?.getStringExtra("assetsDir")!!,
-                )
+                "start" -> startVpn()
                 "stop" -> stopVpn()
                 else -> { Timber.e("Unknown action: $it") }
             }
@@ -95,7 +96,7 @@ class WolframVpnService : VpnService() {
         super.onDestroy()
     }
 
-    fun startVpn(config: String, assetsDir: String) {
+    fun startVpn() {
         // TODO: should this be a coroutine? I can't access the db otherwise
         CoroutineScope(Dispatchers.Default).launch {
             Timber.d("startVpn called")
@@ -104,13 +105,20 @@ class WolframVpnService : VpnService() {
                 return@launch
             }
 
+            // TODO: selected config
+            val configId = xrayConfigRepository.getConfigs().first().id
+            val config = xrayConfigRepository.getById(configId).onLeft {
+                Timber.e(it, "xray config with id ${configId} not found")
+                return@launch
+            }.getOrNull()!!
+
             val tunFd = buildTunInterface()
             if (tunFd == null) {
                 Timber.e("failed to build TUN interface")
                 return@launch
             }
 
-            launchCore(tunFd, config, assetsDir)
+            launchCore(tunFd, config.text)
             startForeground(NOTIF_ID, buildNotification())
         }
     }
@@ -128,16 +136,18 @@ class WolframVpnService : VpnService() {
         stopSelf()
     }
 
-    private fun launchCore(tunFd: ParcelFileDescriptor, config: String, assetsDir: String) {
+    private fun launchCore(tunFd: ParcelFileDescriptor, configText: String) {
         val sockName = "io.github.heather7283.wolfram.sock"
         val sock = LocalServerSocket(sockName)
 
         val wrapper = applicationInfo.nativeLibraryDir + "/libxray-wrapper.so"
         val binary = applicationInfo.nativeLibraryDir + "/libxray.so"
 
+        val assetsDir = geoFileRepository.geoFilesDir
+
         try {
             process = ProcessBuilder(wrapper, sockName, binary, "run")
-                .apply { environment()["XRAY_LOCATION_ASSET"] = assetsDir }
+                .apply { environment()["XRAY_LOCATION_ASSET"] = assetsDir.pathString }
                 .redirectErrorStream(true)
                 .start()
             _running.update { true }
@@ -150,10 +160,8 @@ class WolframVpnService : VpnService() {
         scope.launch {
             try {
                 process?.outputStream?.bufferedWriter()?.use { writer ->
-                    Path(config).bufferedReader().use { reader ->
-                        reader.copyTo(writer)
-                        writer.flush()
-                    }
+                    writer.write(configText)
+                    writer.flush()
                 }
             } catch (e: Exception) {
                 Timber.e(e, "failed to feed config to xray")

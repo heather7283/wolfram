@@ -23,7 +23,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -31,12 +30,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.heather7283.wolfram.WolframNavigationActions
-import io.github.heather7283.wolfram.data.xrayconfig.XrayConfig
+import io.github.heather7283.wolfram.data.xrayconfig.XrayConfigData
 import timber.log.Timber
+import java.util.Collections.emptyList
 
 @Composable
 fun ConfigEntry(
-    config: XrayConfig,
+    config: XrayConfigData,
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
@@ -80,7 +80,7 @@ fun ConfigsScreen(
     modifier: Modifier = Modifier,
 ) {
     val viewModel: ConfigsViewModel = hiltViewModel()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val configs = viewModel.configs.collectAsStateWithLifecycle(emptyList())
 
     Scaffold(
         modifier = modifier,
@@ -94,33 +94,27 @@ fun ConfigsScreen(
             }
         },
     ) { contentPadding ->
-        PullToRefreshBox(
-            isRefreshing = false,
-            onRefresh = { viewModel.refresh() },
-            modifier = Modifier.padding(contentPadding),
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(contentPadding).fillMaxSize(),
         ) {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                if (uiState.configs.isEmpty()) {
-                    item {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillParentMaxSize()
-                        ) {
-                            Text("Empty")
-                        }
+            if (configs.value.isEmpty()) {
+                item {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillParentMaxSize()
+                    ) {
+                        Text("Empty")
                     }
-                } else {
-                    items(uiState.configs) {
-                        ConfigEntry(
-                            config = it,
-                            onClick = { Timber.d("${it.name} onClick clicked") },
-                            onEdit = { navActions.navigateToAddEditConfig("Edit config", it) },
-                            onDelete = { viewModel.deleteConfig(it) },
-                        )
-                    }
+                }
+            } else {
+                items(configs.value) {
+                    ConfigEntry(
+                        config = it,
+                        onClick = { Timber.d("${it.name} onClick clicked") },
+                        onEdit = { navActions.navigateToAddEditConfig("Edit config", it) },
+                        onDelete = { viewModel.delete(it.id) },
+                    )
                 }
             }
         }

@@ -67,10 +67,10 @@ fun WolframNavHost(modifier: Modifier = Modifier) {
         }
 
         composable(
-            "addEditConfig/{title}?configName={configName}",
+            "addEditConfig/{title}?configId={configId}",
             arguments = listOf(
                 navArgument("title") { type = NavType.StringType },
-                navArgument("configName") { type = NavType.StringType; nullable = true },
+                navArgument("configId") { type = NavType.LongType },
             )
         ) { entry ->
             val title = entry.arguments?.getString("title")!!

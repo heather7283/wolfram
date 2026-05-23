@@ -10,16 +10,10 @@ import javax.inject.Inject
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val xrayRepository: XrayRepository,
-    private val xrayConfigRepository: XrayConfigRepository,
-    private val geoFileRepository: GeoFileRepository,
 ) : ViewModel() {
     val running = xrayRepository.running
     val stats = xrayRepository.stats
 
-    // TODO: check and select
-    fun startVpn() = xrayRepository.startVpn(
-        xrayConfigRepository.getConfigFiles().first(),
-        geoFileRepository.geoFilesDir,
-    )
+    fun startVpn() = xrayRepository.startVpn()
     fun stopVpn() = xrayRepository.stopVpn()
 }
