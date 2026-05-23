@@ -13,6 +13,7 @@ import arrow.core.Either
 import arrow.core.flatMap
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.heather7283.wolfram.R
+import io.github.heather7283.wolfram.data.settings.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,12 +26,14 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import timber.log.Timber
 import java.io.IOException
 import java.io.InterruptedIOException
 import java.util.Collections.emptyMap
+import javax.inject.Inject
 import kotlin.io.bufferedWriter
 import kotlin.io.path.Path
 import kotlin.io.path.bufferedReader
@@ -39,6 +42,9 @@ import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
 class WolframVpnService : VpnService() {
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+
     private val binder = WolframVpnServiceBinder()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var process: Process? = null
@@ -90,20 +96,23 @@ class WolframVpnService : VpnService() {
     }
 
     fun startVpn(config: String, assetsDir: String) {
-        Timber.d("startVpn called")
-        if (_running.value) {
-            Timber.w("startVpn called when VPN is already running")
-            return
-        }
+        // TODO: should this be a coroutine? I can't access the db otherwise
+        CoroutineScope(Dispatchers.Default).launch {
+            Timber.d("startVpn called")
+            if (_running.value) {
+                Timber.w("startVpn called when VPN is already running")
+                return@launch
+            }
 
-        val tunFd = buildTunInterface()
-        if (tunFd == null) {
-            Timber.e("failed to build TUN interface")
-            return
-        }
+            val tunFd = buildTunInterface()
+            if (tunFd == null) {
+                Timber.e("failed to build TUN interface")
+                return@launch
+            }
 
-        launchCore(tunFd, config, assetsDir)
-        startForeground(NOTIF_ID, buildNotification())
+            launchCore(tunFd, config, assetsDir)
+            startForeground(NOTIF_ID, buildNotification())
+        }
     }
 
     fun stopVpn() {
@@ -218,10 +227,12 @@ class WolframVpnService : VpnService() {
     }
 
     private fun buildTunInterface(): ParcelFileDescriptor? {
+        val settings = settingsRepository.getSettings()
+
         return Builder()
             .setSession("Wolfram")
-            .addAddress("10.20.30.1", 24)
-            .addRoute("0.0.0.0", 0)
+            .apply { settings.vpnAddresses.forEach { addAddress(it.ip, it.prefix) } }
+            .apply { settings.vpnRoutes.forEach { addRoute(it.ip, it.prefix) } }
             .addDisallowedApplication("io.github.heather7283.wolfram") // important loop protection
             .establish()
     }

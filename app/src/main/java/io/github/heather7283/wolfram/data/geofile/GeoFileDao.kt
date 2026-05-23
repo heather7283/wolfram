@@ -20,8 +20,8 @@ interface GeoFileDao {
     suspend fun insert(geoFile: GeoFile)
 
     @Update
-    fun update(geoFile: GeoFile): Int
+    suspend fun update(geoFile: GeoFile): Int
 
     @Delete
-    fun delete(geoFile: GeoFile): Int
+    suspend fun delete(geoFile: GeoFile): Int
 }

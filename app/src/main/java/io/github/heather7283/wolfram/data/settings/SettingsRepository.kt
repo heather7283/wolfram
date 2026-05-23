@@ -1,0 +1,69 @@
+package io.github.heather7283.wolfram.data.settings
+
+import android.app.Application
+import androidx.compose.ui.util.fastFilteredMap
+import arrow.core.Either
+import arrow.core.right
+import io.github.heather7283.wolfram.data.WolframDatabase
+import io.github.heather7283.wolfram.utils.CIDR
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import timber.log.Timber
+
+@Singleton
+class SettingsRepository @Inject constructor(app: Application) {
+    private val dao = WolframDatabase.getInstance(app.applicationContext).settingsDao()
+
+    val settingsFlow = dao.observeAll().map {
+        Settings(
+            vpnAddresses = toCidrList(it.vpnAddressList),
+            vpnRoutes = toCidrList(it.vpnRouteList),
+        )
+    }
+
+    fun getSettings() = dao.getAll().let {
+        Settings(
+            vpnAddresses = toCidrList(it.vpnAddressList),
+            vpnRoutes = toCidrList(it.vpnRouteList),
+        )
+    }
+
+    private fun toCidrList(value: String): List<CIDR> {
+        // stored as [ "0.0.0.0/0", "192.168.0.1/24" ]
+        return Either.catch { Json.decodeFromString<List<String>>(value) }.fold(
+            ifLeft = { Timber.e(it, "Could not parse ${value} as list of strings"); emptyList() },
+            ifRight = {
+                it.mapNotNull { cidrStr ->
+                    CIDR.parse(cidrStr).fold(
+                        ifLeft = { Timber.e(it, "Could not parse ${cidrStr} as CIDR"); null },
+                        ifRight = { it }
+                    )
+                }
+            }
+        )
+    }
+
+    private fun fromCidrList(list: List<CIDR>): String {
+        return Json.encodeToString(list.map { "${it.ip.hostAddress}/${it.prefix}" })
+    }
+
+    suspend fun addVpnAddress(cidr: CIDR) = Either.catch {
+        withContext(Dispatchers.IO) {
+            val old = toCidrList(dao.getVpnAddressList())
+            val new = old + listOf(cidr)
+            dao.updateVpnAddressList(fromCidrList(new))
+        }
+    }
+
+    suspend fun removeVpnAddress(cidr: CIDR) = Either.catch {
+        withContext(Dispatchers.IO) {
+            val old = toCidrList(dao.getVpnAddressList())
+            val new = old.filterNot { it == cidr }
+            dao.updateVpnAddressList(fromCidrList(new))
+        }
+    }
+}

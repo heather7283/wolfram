@@ -7,9 +7,9 @@ import androidx.room.PrimaryKey
 data class GeoFile(
     @PrimaryKey val name: String,
     val url: String,
-    val existsLocally: Boolean,
+    val existsLocally: Boolean = false,
     // I couldn't get TypeConverter nonsense to work
     // so I'm just gonna use Long instead of Date here
-    val lastUpdated: Long?,
-    val size: Long?,
+    val lastUpdated: Long? = null,
+    val size: Long? = null,
 )

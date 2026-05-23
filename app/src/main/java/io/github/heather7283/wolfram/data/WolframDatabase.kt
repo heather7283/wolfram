@@ -4,17 +4,53 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.db.SupportSQLiteDatabase
 import io.github.heather7283.wolfram.data.geofile.GeoFile
 import io.github.heather7283.wolfram.data.geofile.GeoFileDao
+import io.github.heather7283.wolfram.data.settings.Settings
+import io.github.heather7283.wolfram.data.settings.SettingsDao
+import io.github.heather7283.wolfram.data.settings.SettingsEntity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-@Database(entities=[GeoFile::class], version=1)
+@Database(entities=[GeoFile::class, SettingsEntity::class], version=1)
 abstract class WolframDatabase : RoomDatabase() {
     abstract fun geoFileDao(): GeoFileDao
+    abstract fun settingsDao(): SettingsDao
 
     companion object {
+        val callback = object : Callback() {
+            override fun onCreate(connection: SQLiteConnection) {
+                super.onCreate(connection)
+
+                instance?.let { db ->
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val settings = db.settingsDao()
+                        settings.create(SettingsEntity(
+                            vpnAddressList = """[ "10.20.30.1/24" ]""",
+                            vpnRouteList = """[ "0.0.0.0/0" ]""",
+                        ))
+
+                        val geoFiles = db.geoFileDao()
+                        geoFiles.insert(GeoFile(
+                            name = "geoip.dat",
+                            url = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat",
+                        ))
+                        geoFiles.insert(GeoFile(
+                            name = "geosite.dat",
+                            url = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat",
+                        ))
+                    }
+                }
+            }
+        }
+
         private var instance: WolframDatabase? = null
         fun getInstance(ctx: Context) = instance ?: Room.databaseBuilder(
             ctx, WolframDatabase::class.java, "wolfram"
-        ).build().also { instance = it }
+        ).addCallback(callback).build().also { instance = it }
     }
 }
