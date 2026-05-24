@@ -35,6 +35,7 @@ abstract class WolframDatabase : RoomDatabase() {
                         settings.create(SettingsEntity(
                             vpnAddressList = """[ "10.20.30.1/24" ]""",
                             vpnRouteList = """[ "0.0.0.0/0" ]""",
+                            activeConfigId = 0,
                         ))
 
                         val geoFiles = db.geoFileDao()

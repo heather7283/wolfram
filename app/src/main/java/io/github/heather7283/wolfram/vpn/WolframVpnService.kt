@@ -106,7 +106,7 @@ class WolframVpnService : VpnService() {
             }
 
             // TODO: selected config
-            val configId = xrayConfigRepository.getConfigs().first().id
+            val configId = settingsRepository.getSettings().activeConfigId
             val config = xrayConfigRepository.getById(configId).onLeft {
                 Timber.e(it, "xray config with id ${configId} not found")
                 return@launch

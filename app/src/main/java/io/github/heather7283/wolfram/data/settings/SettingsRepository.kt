@@ -18,19 +18,14 @@ import timber.log.Timber
 class SettingsRepository @Inject constructor(app: Application) {
     private val dao = WolframDatabase.getInstance(app.applicationContext).settingsDao()
 
-    val settingsFlow = dao.observeAll().map {
-        Settings(
-            vpnAddresses = toCidrList(it.vpnAddressList),
-            vpnRoutes = toCidrList(it.vpnRouteList),
-        )
-    }
+    private fun toSettings(e: SettingsEntity) = Settings(
+        vpnAddresses = toCidrList(e.vpnAddressList),
+        vpnRoutes = toCidrList(e.vpnRouteList),
+        activeConfigId = e.activeConfigId,
+    )
 
-    fun getSettings() = dao.getAll().let {
-        Settings(
-            vpnAddresses = toCidrList(it.vpnAddressList),
-            vpnRoutes = toCidrList(it.vpnRouteList),
-        )
-    }
+    val settingsFlow = dao.observeAll().map(::toSettings)
+    fun getSettings() = toSettings(dao.getAll())
 
     private fun toCidrList(value: String): List<CIDR> {
         // stored as [ "0.0.0.0/0", "192.168.0.1/24" ]
@@ -64,6 +59,12 @@ class SettingsRepository @Inject constructor(app: Application) {
             val old = toCidrList(dao.getVpnAddressList())
             val new = old.filterNot { it == cidr }
             dao.updateVpnAddressList(fromCidrList(new))
+        }
+    }
+
+    suspend fun setActiveConfigId(id: Long) = Either.catch {
+        withContext(Dispatchers.IO) {
+            dao.setActiveConfigId(id)
         }
     }
 }

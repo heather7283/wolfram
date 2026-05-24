@@ -16,9 +16,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -37,12 +39,21 @@ import java.util.Collections.emptyList
 @Composable
 fun ConfigEntry(
     config: XrayConfigData,
+    isActive: Boolean,
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(onClick = onClick, modifier = modifier) {
+    Card(
+        onClick = onClick,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.run {
+                if (isActive) { surfaceContainerHighest } else { surfaceContainer }
+            },
+        ),
+        modifier = modifier,
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -81,6 +92,7 @@ fun ConfigsScreen(
 ) {
     val viewModel: ConfigsViewModel = hiltViewModel()
     val configs = viewModel.configs.collectAsStateWithLifecycle(emptyList())
+    val activeConfig = viewModel.activeConfig.collectAsStateWithLifecycle(-67)
 
     Scaffold(
         modifier = modifier,
@@ -111,7 +123,8 @@ fun ConfigsScreen(
                 items(configs.value) {
                     ConfigEntry(
                         config = it,
-                        onClick = { Timber.d("${it.name} onClick clicked") },
+                        isActive = it.id == activeConfig.value,
+                        onClick = { viewModel.setActive(it.id) },
                         onEdit = { navActions.navigateToAddEditConfig("Edit config", it) },
                         onDelete = { viewModel.delete(it.id) },
                     )

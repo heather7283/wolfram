@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SettingsDao {
+    @Insert
+    suspend fun create(settings: SettingsEntity)
+
     @Query("SELECT * FROM settings WHERE id = 1")
     fun observeAll(): Flow<SettingsEntity>
 
@@ -19,6 +22,8 @@ interface SettingsDao {
     @Query("UPDATE settings SET vpnAddressList = :list WHERE id = 1")
     suspend fun updateVpnAddressList(list: String)
 
-    @Insert
-    suspend fun create(settings: SettingsEntity)
+    @Query("SELECT activeConfigId FROM settings WHERE id = 1")
+    suspend fun getActiveConfigId(): Long
+    @Query("UPDATE settings SET activeConfigId = :id WHERE id = 1")
+    suspend fun setActiveConfigId(id: Long)
 }

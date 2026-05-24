@@ -66,24 +66,26 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val viewModel: SettingsViewModel = hiltViewModel()
-    val settings = viewModel.settings.collectAsStateWithLifecycle(Settings(emptyList(), emptyList()))
+    val settings = viewModel.settings.collectAsStateWithLifecycle(null)
 
     Scaffold(
         modifier = modifier,
         bottomBar = navBar,
     ) { contentPadding ->
         Column(modifier = Modifier.padding(contentPadding)) {
-            Text("Routes")
-            LazyColumn() {
-                items(settings.value.vpnRoutes) {
-                    CidrCard(it, { Timber.d("on delete") })
+            settings.value?.also { settings ->
+                Text("Routes")
+                LazyColumn() {
+                    items(settings.vpnRoutes) {
+                        CidrCard(it, { Timber.d("on delete") })
+                    }
                 }
-            }
 
-            Text("Addresses")
-            LazyColumn() {
-                items(settings.value.vpnAddresses) {
-                    CidrCard(it, { Timber.d("on delete") })
+                Text("Addresses")
+                LazyColumn() {
+                    items(settings.vpnAddresses) {
+                        CidrCard(it, { Timber.d("on delete") })
+                    }
                 }
             }
         }
