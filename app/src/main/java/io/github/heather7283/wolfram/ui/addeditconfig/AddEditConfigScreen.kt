@@ -2,7 +2,10 @@ package io.github.heather7283.wolfram.ui.addeditconfig
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -48,7 +51,10 @@ fun AddEditConfigScreen(
     ) { contentPadding ->
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier
+                .padding(contentPadding)
+                .consumeWindowInsets(contentPadding)
+                .imePadding(),
         ) {
             TextField(
                 value = uiState.name,
