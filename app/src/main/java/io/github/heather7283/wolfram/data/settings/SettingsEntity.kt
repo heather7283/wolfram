@@ -20,6 +20,9 @@ data class SettingsEntity(
     val vpnAddressList: String,
     val vpnRouteList: String,
 
+    val statsEnabled: Boolean,
+    val statsEndpoint: String,
+
     val activeConfigId: Long,
 
     // Since this is a single row table the only ID it will have is 1

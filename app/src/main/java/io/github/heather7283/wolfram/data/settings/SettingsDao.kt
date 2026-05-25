@@ -26,4 +26,10 @@ interface SettingsDao {
     suspend fun getActiveConfigId(): Long
     @Query("UPDATE settings SET activeConfigId = :id WHERE id = 1")
     suspend fun setActiveConfigId(id: Long)
+
+    @Query("UPDATE settings SET statsEnabled = :enabled WHERE id = 1")
+    suspend fun setStatsEnabled(enabled: Boolean)
+
+    @Query("UPDATE settings SET statsEndpoint = :endpoint WHERE id = 1")
+    suspend fun setStatsEndpoint(endpoint: String)
 }

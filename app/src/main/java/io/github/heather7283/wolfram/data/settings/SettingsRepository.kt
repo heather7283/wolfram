@@ -1,9 +1,7 @@
 package io.github.heather7283.wolfram.data.settings
 
 import android.app.Application
-import androidx.compose.ui.util.fastFilteredMap
 import arrow.core.Either
-import arrow.core.right
 import io.github.heather7283.wolfram.data.WolframDatabase
 import io.github.heather7283.wolfram.utils.CIDR
 import jakarta.inject.Inject
@@ -18,10 +16,13 @@ import timber.log.Timber
 class SettingsRepository @Inject constructor(app: Application) {
     private val dao = WolframDatabase.getInstance(app.applicationContext).settingsDao()
 
+    // TODO: is there a better way to do this?
     private fun toSettings(e: SettingsEntity) = Settings(
         vpnAddresses = toCidrList(e.vpnAddressList),
         vpnRoutes = toCidrList(e.vpnRouteList),
         activeConfigId = e.activeConfigId,
+        statsEnabled = e.statsEnabled,
+        statsEndpoint = e.statsEndpoint,
     )
 
     val settingsFlow = dao.observeAll().map(::toSettings)
@@ -65,6 +66,18 @@ class SettingsRepository @Inject constructor(app: Application) {
     suspend fun setActiveConfigId(id: Long) = Either.catch {
         withContext(Dispatchers.IO) {
             dao.setActiveConfigId(id)
+        }
+    }
+
+    suspend fun setStatsEnabled(enabled: Boolean) = Either.catch {
+        withContext(Dispatchers.IO) {
+            dao.setStatsEnabled(enabled)
+        }
+    }
+
+    suspend fun setStatsEndpoint(endpoint: String) = Either.catch {
+        withContext(Dispatchers.IO) {
+            dao.setStatsEndpoint(endpoint)
         }
     }
 }

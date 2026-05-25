@@ -14,6 +14,7 @@ import arrow.core.flatMap
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.heather7283.wolfram.R
 import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
+import io.github.heather7283.wolfram.data.settings.Settings
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
 import io.github.heather7283.wolfram.data.xrayconfig.XrayConfigRepository
 import kotlinx.coroutines.CoroutineScope
@@ -105,8 +106,8 @@ class WolframVpnService : VpnService() {
                 return@launch
             }
 
-            // TODO: selected config
-            val configId = settingsRepository.getSettings().activeConfigId
+            val settings = settingsRepository.getSettings()
+            val configId = settings.activeConfigId
             val config = xrayConfigRepository.getById(configId).onLeft {
                 Timber.e(it, "xray config with id ${configId} not found")
                 return@launch
@@ -118,7 +119,7 @@ class WolframVpnService : VpnService() {
                 return@launch
             }
 
-            launchCore(tunFd, config.text)
+            launchCore(tunFd, config.text, settings)
             startForeground(NOTIF_ID, buildNotification())
         }
     }
@@ -136,7 +137,7 @@ class WolframVpnService : VpnService() {
         stopSelf()
     }
 
-    private fun launchCore(tunFd: ParcelFileDescriptor, configText: String) {
+    private fun launchCore(tunFd: ParcelFileDescriptor, configText: String, settings: Settings) {
         val sockName = "io.github.heather7283.wolfram.sock"
         val sock = LocalServerSocket(sockName)
 
@@ -186,6 +187,10 @@ class WolframVpnService : VpnService() {
         }
 
         scope.launch {
+            if (!settings.statsEnabled) {
+                return@launch
+            }
+
             val http = OkHttpClient.Builder()
                 .callTimeout(1.seconds)
                 .build()
@@ -196,7 +201,7 @@ class WolframVpnService : VpnService() {
                 _stats.update {
                     Either.catch {
                         val req = Request.Builder()
-                            .url("http://127.0.0.1:54321/debug/vars") // TODO: configurable
+                            .url("http://${settings.statsEndpoint}/debug/vars")
                             .build()
 
                         http.newCall(req).execute().use { resp ->

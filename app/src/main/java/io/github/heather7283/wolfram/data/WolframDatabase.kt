@@ -36,6 +36,8 @@ abstract class WolframDatabase : RoomDatabase() {
                             vpnAddressList = """[ "10.20.30.1/24" ]""",
                             vpnRouteList = """[ "0.0.0.0/0" ]""",
                             activeConfigId = 0,
+                            statsEnabled = true,
+                            statsEndpoint = "127.0.0.1:54321",
                         ))
 
                         val geoFiles = db.geoFileDao()

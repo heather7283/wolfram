@@ -6,5 +6,8 @@ data class Settings(
     val vpnAddresses: List<CIDR>,
     val vpnRoutes: List<CIDR>,
 
+    val statsEnabled: Boolean,
+    val statsEndpoint: String,
+
     val activeConfigId: Long,
 )
