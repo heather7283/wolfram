@@ -16,7 +16,7 @@ import io.github.heather7283.wolfram.R
 import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
 import io.github.heather7283.wolfram.data.settings.Settings
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
-import io.github.heather7283.wolfram.data.xrayconfig.XrayConfigRepository
+import io.github.heather7283.wolfram.data.config.XrayConfigRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import timber.log.Timber
@@ -38,9 +37,6 @@ import java.io.InterruptedIOException
 import java.util.Collections.emptyMap
 import javax.inject.Inject
 import kotlin.io.bufferedWriter
-import kotlin.io.path.Path
-import kotlin.io.path.bufferedReader
-import kotlin.io.path.bufferedWriter
 import kotlin.io.path.pathString
 import kotlin.time.Duration.Companion.seconds
 

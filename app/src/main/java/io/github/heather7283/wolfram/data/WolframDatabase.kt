@@ -5,18 +5,15 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.SQLiteConnection
-import androidx.sqlite.db.SupportSQLiteDatabase
 import io.github.heather7283.wolfram.data.geofile.GeoFile
 import io.github.heather7283.wolfram.data.geofile.GeoFileDao
-import io.github.heather7283.wolfram.data.settings.Settings
 import io.github.heather7283.wolfram.data.settings.SettingsDao
 import io.github.heather7283.wolfram.data.settings.SettingsEntity
-import io.github.heather7283.wolfram.data.xrayconfig.XrayConfigDao
-import io.github.heather7283.wolfram.data.xrayconfig.XrayConfigEntity
+import io.github.heather7283.wolfram.data.config.XrayConfigDao
+import io.github.heather7283.wolfram.data.config.XrayConfigEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Database(entities=[GeoFile::class, SettingsEntity::class, XrayConfigEntity::class], version=1)
 abstract class WolframDatabase : RoomDatabase() {

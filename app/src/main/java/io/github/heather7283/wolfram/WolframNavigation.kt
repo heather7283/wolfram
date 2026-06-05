@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
-import io.github.heather7283.wolfram.data.xrayconfig.XrayConfigData
+import io.github.heather7283.wolfram.data.config.XrayConfigData
 
 enum class WolframTopLevelDestination(
     val route: String,

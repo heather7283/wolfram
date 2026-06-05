@@ -1,4 +1,4 @@
-package io.github.heather7283.wolfram.data.xrayconfig
+package io.github.heather7283.wolfram.data.config
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

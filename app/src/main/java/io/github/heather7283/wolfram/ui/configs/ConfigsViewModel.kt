@@ -4,15 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
-import io.github.heather7283.wolfram.data.xrayconfig.XrayConfigData
-import io.github.heather7283.wolfram.data.xrayconfig.XrayConfigRepository
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
+import io.github.heather7283.wolfram.data.config.XrayConfigRepository
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
