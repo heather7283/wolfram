@@ -17,8 +17,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import io.github.heather7283.wolfram.WolframNavigationActions
-import io.github.heather7283.wolfram.WolframTopLevelDestination
 import io.github.heather7283.wolfram.ui.addeditconfig.AddEditConfigScreen
 import io.github.heather7283.wolfram.ui.assets.AssetsScreen
 import io.github.heather7283.wolfram.ui.configs.ConfigsScreen

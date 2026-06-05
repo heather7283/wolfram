@@ -25,7 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.heather7283.wolfram.WolframNavigationActions
+import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import io.github.heather7283.wolfram.data.xray.XrayInOutStat
 import io.github.heather7283.wolfram.data.xray.XrayStats
 import java.text.DecimalFormat

@@ -30,7 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.heather7283.wolfram.WolframNavigationActions
+import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import io.github.heather7283.wolfram.utils.CIDR
 
 @Composable

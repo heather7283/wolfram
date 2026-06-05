@@ -19,7 +19,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import io.github.heather7283.wolfram.WolframNavigationActions
+import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import kotlinx.coroutines.launch
 
 @Composable

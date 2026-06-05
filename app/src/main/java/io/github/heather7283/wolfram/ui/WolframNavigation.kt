@@ -1,4 +1,4 @@
-package io.github.heather7283.wolfram
+package io.github.heather7283.wolfram.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
