@@ -4,7 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.heather7283.wolfram.vpn.XrayRepository
+import io.github.heather7283.wolfram.data.xray.XrayRepository
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 

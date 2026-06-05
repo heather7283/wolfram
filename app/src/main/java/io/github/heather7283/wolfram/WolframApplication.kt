@@ -5,7 +5,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import dagger.hilt.android.HiltAndroidApp
-import io.github.heather7283.wolfram.vpn.XrayRepository
+import io.github.heather7283.wolfram.data.xray.XrayRepository
 import jakarta.inject.Inject
 import timber.log.Timber
 import timber.log.Timber.DebugTree

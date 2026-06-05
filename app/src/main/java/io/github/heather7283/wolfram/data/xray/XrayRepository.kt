@@ -1,4 +1,4 @@
-package io.github.heather7283.wolfram.vpn
+package io.github.heather7283.wolfram.data.xray
 
 import android.content.ComponentName
 import android.content.Context
@@ -8,6 +8,7 @@ import android.os.IBinder
 import androidx.core.content.ContextCompat
 import arrow.core.Either
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.github.heather7283.wolfram.vpn.WolframVpnService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,14 +18,11 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.nio.file.Path
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.io.path.pathString
 
 @Singleton
 class XrayRepository @Inject constructor(

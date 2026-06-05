@@ -17,6 +17,8 @@ import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
 import io.github.heather7283.wolfram.data.settings.Settings
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
 import io.github.heather7283.wolfram.data.config.XrayConfigRepository
+import io.github.heather7283.wolfram.data.xray.XrayStats
+import io.github.heather7283.wolfram.data.xray.parseXrayStats
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

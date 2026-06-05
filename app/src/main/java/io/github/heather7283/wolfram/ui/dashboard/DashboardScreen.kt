@@ -4,10 +4,8 @@ import android.app.Activity
 import android.net.VpnService
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -23,14 +21,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.heather7283.wolfram.WolframNavigationActions
-import io.github.heather7283.wolfram.vpn.XrayInOutStat
-import io.github.heather7283.wolfram.vpn.XrayStats
+import io.github.heather7283.wolfram.data.xray.XrayInOutStat
+import io.github.heather7283.wolfram.data.xray.XrayStats
 import java.text.DecimalFormat
 
 private fun formatBytes(bytes: Long): String {

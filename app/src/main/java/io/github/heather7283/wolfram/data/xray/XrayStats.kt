@@ -1,4 +1,4 @@
-package io.github.heather7283.wolfram.vpn
+package io.github.heather7283.wolfram.data.xray
 
 import arrow.core.Either
 import kotlinx.serialization.Serializable
