@@ -54,8 +54,7 @@ fun AddEditConfigScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .padding(contentPadding)
-                .consumeWindowInsets(contentPadding)
-                .imePadding(),
+                .consumeWindowInsets(contentPadding),
         ) {
             TextField(
                 value = uiState.name,

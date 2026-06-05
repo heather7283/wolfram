@@ -1,5 +1,6 @@
 package io.github.heather7283.wolfram.ui
 
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
@@ -34,7 +35,7 @@ fun WolframNavHost(modifier: Modifier = Modifier) {
     NavHost(
         navController = navController,
         startDestination = startDestination.route,
-        modifier = modifier,
+        modifier = modifier.imePadding(),
     ) {
         val bar = @Composable {
             NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
