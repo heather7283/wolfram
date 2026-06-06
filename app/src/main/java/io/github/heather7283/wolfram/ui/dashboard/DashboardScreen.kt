@@ -4,10 +4,14 @@ import android.app.Activity
 import android.net.VpnService
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,58 +19,92 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sunnychung.lib.android.composabletable.ux.Table
 import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import io.github.heather7283.wolfram.data.xray.XrayInOutStat
 import io.github.heather7283.wolfram.data.xray.XrayStats
+import io.github.heather7283.wolfram.data.xray.XrayStatsOption
+import io.github.heather7283.wolfram.utils.formatBytes
+import io.github.heather7283.wolfram.utils.not
 import java.text.DecimalFormat
 
-private fun formatBytes(bytes: Long): String {
-    if (bytes < 1024) return "$bytes B"
-    val kb = bytes / 1024.0
-    if (kb < 1024) return "${DecimalFormat("0.#").format(kb)} KB"
-    val mb = kb / 1024.0
-    if (mb < 1024) return "${DecimalFormat("0.#").format(mb)} MB"
-    return "${DecimalFormat("0.#").format(mb / 1024.0)} GB"
+@Composable
+private fun Cell(
+    text: String,
+) {
+    Box(modifier = Modifier.border(width = 1.dp, color = Color.Gray)) {
+        Text(text = text, modifier = Modifier.padding(4.dp))
+    }
 }
 
 @Composable
-private fun StatsInOut(stats: XrayInOutStat, modifier: Modifier = Modifier) {
-    LazyColumn() {
-        stats.forEach { (k, v) ->
-            item {
-                Text(k)
-                Row() {
-                    Column() {
-                        Text("uplink")
-                        Text(formatBytes(v.uplink))
-                    }
-                    Column() {
-                        Text("downlink")
-                        Text(formatBytes(v.downlink))
-                    }
-                }
-            }
+private fun StatsInOut(
+    label: String,
+    stats: List<Triple<String, Long, Long>>,
+    modifier: Modifier = Modifier
+) {
+    Table(
+        rowCount = stats.size + 1,
+        columnCount = 3,
+        modifier = modifier.fillMaxWidth(),
+    ) { row, column ->
+        when (column) {
+            0 -> Cell(if (!row) { label } else { stats[row - 1].first })
+            1 -> Cell(if (!row) { "downlink" } else { formatBytes(stats[row - 1].second) })
+            2 -> Cell(if (!row) { "uplink" } else { formatBytes(stats[row - 1].third) })
         }
     }
 }
 
 @Composable
-private fun Stats(stats: XrayStats, modifier: Modifier = Modifier) {
-    Text("Inbounds:")
-    StatsInOut(stats.inbound)
-    Spacer(Modifier.height(8.dp))
-    Text("Outbounds:")
-    StatsInOut(stats.outbound)
+private fun Stats(stats: SortedXrayStats, modifier: Modifier = Modifier) {
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text("Traffic", style = MaterialTheme.typography.headlineSmall)
+            when (stats) {
+                is SortedXrayStats.Disabled -> Text("Stats collection is disabled in settings")
+                is SortedXrayStats.Idle -> Text("Core is not running")
+                is SortedXrayStats.Error -> Text("Could not collect stats: ${stats.error}")
+                is SortedXrayStats.Stats -> stats.stats.also { (inbound, outbound) ->
+                    if (inbound.isEmpty() && outbound.isEmpty()) {
+                        Text("Nothing to show")
+                        return@also
+                    }
+
+                    if (!inbound.isEmpty()) {
+                        Column() {
+                            Text("Inbounds")
+                            StatsInOut("Inbound", inbound)
+                        }
+                    }
+                    if (!outbound.isEmpty()) {
+                        Column() {
+                            Text("Outbounds")
+                            StatsInOut("Outbound", outbound)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -77,7 +115,7 @@ fun DashboardScreen(
 ) {
     val viewModel: DashboardViewModel = hiltViewModel()
     val running = viewModel.running.collectAsStateWithLifecycle()
-    val stats = viewModel.stats.collectAsStateWithLifecycle()
+    val stats = viewModel.stats.collectAsStateWithLifecycle(SortedXrayStats.Idle)
     val context = LocalContext.current
 
     val vpnPermsLauncher = rememberLauncherForActivityResult(
@@ -115,19 +153,20 @@ fun DashboardScreen(
             }
         }
     ) { paddingValues ->
-        Column() {
-            Text(
-                "VPN is " + if (running.value) { "running" } else { "not running" },
-                modifier = Modifier.padding(paddingValues)
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            stats.value.onLeft {
-                Text("Could not fetch stats: ${it}", modifier = Modifier.fillMaxSize())
-            }.onRight {
-                Stats(it)
+        Column(
+            modifier = Modifier.padding(paddingValues).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Card(modifier = modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text("Status", style = MaterialTheme.typography.headlineSmall)
+                    Text("Core is " + if (running.value) { "running" } else { "not running" })
+                }
             }
+            Stats(stats.value)
         }
     }
 }

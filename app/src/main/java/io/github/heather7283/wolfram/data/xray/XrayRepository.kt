@@ -36,7 +36,7 @@ class XrayRepository @Inject constructor(
     private val _logs = MutableSharedFlow<String>(replay = 100)
     val logs = _logs.asSharedFlow()
 
-    private val _stats = MutableStateFlow<Either<Throwable, XrayStats>>(Either.Right(XrayStats()))
+    private val _stats = MutableStateFlow<XrayStatsOption>(XrayStatsOption.Idle)
     val stats = _stats.asStateFlow()
 
     private var mirrorJobs: List<Job> = emptyList()

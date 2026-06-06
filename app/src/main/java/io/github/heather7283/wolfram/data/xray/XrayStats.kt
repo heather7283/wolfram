@@ -18,6 +18,12 @@ data class XrayStats(
     val outbound: XrayInOutStat = emptyMap(),
 )
 
+sealed class XrayStatsOption {
+    data object Idle : XrayStatsOption()
+    data class Success(val stats: XrayStats) : XrayStatsOption()
+    data class Error(val err: Throwable) : XrayStatsOption()
+}
+
 @Serializable
 private data class XrayResponse(
     val stats: XrayStats,

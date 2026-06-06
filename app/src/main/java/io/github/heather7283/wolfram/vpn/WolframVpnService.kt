@@ -17,7 +17,7 @@ import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
 import io.github.heather7283.wolfram.data.settings.Settings
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
 import io.github.heather7283.wolfram.data.config.XrayConfigRepository
-import io.github.heather7283.wolfram.data.xray.XrayStats
+import io.github.heather7283.wolfram.data.xray.XrayStatsOption
 import io.github.heather7283.wolfram.data.xray.parseXrayStats
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +36,6 @@ import okhttp3.Request
 import timber.log.Timber
 import java.io.IOException
 import java.io.InterruptedIOException
-import java.util.Collections.emptyMap
 import javax.inject.Inject
 import kotlin.io.bufferedWriter
 import kotlin.io.path.pathString
@@ -61,8 +60,7 @@ class WolframVpnService : VpnService() {
     )
     val logs = _logs.asSharedFlow()
 
-    private val _stats: MutableStateFlow<Either<Throwable, XrayStats>> =
-        MutableStateFlow(Either.Right(XrayStats(emptyMap(), emptyMap())))
+    private val _stats = MutableStateFlow<XrayStatsOption>(XrayStatsOption.Idle)
     val stats = _stats.asStateFlow()
 
     private val NOTIF_ID = 67;
@@ -186,6 +184,7 @@ class WolframVpnService : VpnService() {
 
         scope.launch {
             if (!settings.statsEnabled) {
+                _stats.update { XrayStatsOption.Idle }
                 return@launch
             }
 
@@ -193,9 +192,10 @@ class WolframVpnService : VpnService() {
                 .callTimeout(1.seconds)
                 .build()
 
-            do {
-                delay(5.seconds) // TODO: configurable
-
+            while (true) {
+                if (!_running.value) {
+                    break
+                }
                 _stats.update {
                     Either.catch {
                         val req = Request.Builder()
@@ -211,15 +211,13 @@ class WolframVpnService : VpnService() {
                     }.flatMap { body ->
                         // TODO: use grpc instead, should be more efficient? not like it matters
                         parseXrayStats(body)
-                    }
+                    }.fold(
+                        ifLeft = { XrayStatsOption.Error(it) },
+                        ifRight = { XrayStatsOption.Success(it) }
+                    )
                 }
-
-                _stats.value.onLeft {
-                    Timber.e(it, "could not fetch stats")
-                }.onRight {
-                    Timber.d("stats: ${it}")
-                }
-            } while (_running.value)
+                delay(5.seconds) // TODO: configurable
+            }
         }
         scope.launch {
             try {
@@ -233,6 +231,7 @@ class WolframVpnService : VpnService() {
         scope.launch {
             val rc = process?.waitFor() ?: -1
             _running.update { false }
+            _stats.update { XrayStatsOption.Idle }
             _logs.emit("[process exited with code $rc]")
         }
     }
