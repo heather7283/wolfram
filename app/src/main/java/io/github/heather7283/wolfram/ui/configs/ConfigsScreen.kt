@@ -30,8 +30,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import io.github.heather7283.wolfram.data.config.XrayConfigData
+import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import java.util.Collections.emptyList
 
 @Composable

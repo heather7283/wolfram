@@ -3,8 +3,8 @@ package io.github.heather7283.wolfram.ui.configs
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.heather7283.wolfram.data.settings.SettingsRepository
 import io.github.heather7283.wolfram.data.config.XrayConfigRepository
+import io.github.heather7283.wolfram.data.settings.SettingsRepository
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject

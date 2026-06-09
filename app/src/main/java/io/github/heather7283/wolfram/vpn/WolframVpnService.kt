@@ -13,10 +13,10 @@ import arrow.core.Either
 import arrow.core.flatMap
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.heather7283.wolfram.R
+import io.github.heather7283.wolfram.data.config.XrayConfigRepository
 import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
 import io.github.heather7283.wolfram.data.settings.Settings
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
-import io.github.heather7283.wolfram.data.config.XrayConfigRepository
 import io.github.heather7283.wolfram.data.xray.XrayStatsOption
 import io.github.heather7283.wolfram.data.xray.parseXrayStats
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +37,6 @@ import timber.log.Timber
 import java.io.IOException
 import java.io.InterruptedIOException
 import javax.inject.Inject
-import kotlin.io.bufferedWriter
 import kotlin.io.path.pathString
 import kotlin.time.Duration.Companion.seconds
 

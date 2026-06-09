@@ -2,7 +2,6 @@ package io.github.heather7283.wolfram.data.settings
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import kotlinx.serialization.json.Json
 
 // Settings are stored in room db as a single row table.
 // Yes, I know how retarded this is. Shut up.

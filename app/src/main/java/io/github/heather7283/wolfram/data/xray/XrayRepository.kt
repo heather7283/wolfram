@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.core.content.ContextCompat
-import arrow.core.Either
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.heather7283.wolfram.vpn.WolframVpnService
 import kotlinx.coroutines.CoroutineScope
