@@ -20,6 +20,9 @@ data class SettingsEntity(
     val vpnAddressList: String,
     val vpnRouteList: String,
 
+    val selectedAppsList: String,
+    val selectedAppsIsWhitelist: Boolean,
+
     val statsEnabled: Boolean,
     val statsEndpoint: String,
 

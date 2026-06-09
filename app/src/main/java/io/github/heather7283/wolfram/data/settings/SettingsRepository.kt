@@ -20,6 +20,8 @@ class SettingsRepository @Inject constructor(app: Application) {
     private fun toSettings(e: SettingsEntity) = Settings(
         vpnAddresses = toCidrList(e.vpnAddressList),
         vpnRoutes = toCidrList(e.vpnRouteList),
+        selectedApps = toStringList(e.selectedAppsList),
+        selectedAppsIsWhitelist = e.selectedAppsIsWhitelist,
         activeConfigId = e.activeConfigId,
         statsEnabled = e.statsEnabled,
         statsEndpoint = e.statsEndpoint,
@@ -47,6 +49,18 @@ class SettingsRepository @Inject constructor(app: Application) {
         return Json.encodeToString(list.map { "${it.ip.hostAddress}/${it.prefix}" })
     }
 
+    private fun toStringList(value: String): List<String> {
+        // stored as [ "a", "b" ]
+        return Either.catch { Json.decodeFromString<List<String>>(value) }.fold(
+            ifLeft = { Timber.e(it, "Could not parse ${value} as list of strings"); emptyList() },
+            ifRight = { it }
+        )
+    }
+
+    private fun fromStringList(list: List<String>): String {
+        return Json.encodeToString(list)
+    }
+
     suspend fun addVpnAddress(cidr: CIDR) = Either.catch {
         withContext(Dispatchers.IO) {
             val old = toCidrList(dao.getVpnAddressList())
@@ -60,6 +74,27 @@ class SettingsRepository @Inject constructor(app: Application) {
             val old = toCidrList(dao.getVpnAddressList())
             val new = old.filterNot { it == cidr }
             dao.updateVpnAddressList(fromCidrList(new))
+        }
+    }
+
+    suspend fun addSelectedApp(app: String) = Either.catch {
+        withContext(Dispatchers.IO) {
+            val old = toStringList(dao.getSelectedAppsList())
+            val new = old + listOf(app)
+            dao.setSelectedAppsList(fromStringList(new))
+        }
+    }
+    suspend fun removeSelectedApp(app: String) = Either.catch {
+        withContext(Dispatchers.IO) {
+            val old = toStringList(dao.getSelectedAppsList())
+            val new = old.filterNot { it == app }
+            dao.setSelectedAppsList(fromStringList(new))
+        }
+    }
+
+    suspend fun setSelectedAppsIsWhitelist(value: Boolean) = Either.catch {
+        withContext(Dispatchers.IO) {
+            dao.setSelectedAppsIsWhitelist(value)
         }
     }
 

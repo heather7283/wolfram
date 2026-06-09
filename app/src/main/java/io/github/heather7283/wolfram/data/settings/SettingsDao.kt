@@ -22,6 +22,14 @@ interface SettingsDao {
     @Query("UPDATE settings SET vpnAddressList = :list WHERE id = 1")
     suspend fun updateVpnAddressList(list: String)
 
+    @Query("SELECT selectedAppsList FROM settings WHERE id = 1")
+    suspend fun getSelectedAppsList(): String
+    @Query("UPDATE settings SET selectedAppsList = :list WHERE id = 1")
+    suspend fun setSelectedAppsList(list: String)
+
+    @Query("UPDATE settings SET selectedAppsIsWhitelist = :isWhitelist WHERE id = 1")
+    suspend fun setSelectedAppsIsWhitelist(isWhitelist: Boolean)
+
     @Query("SELECT activeConfigId FROM settings WHERE id = 1")
     suspend fun getActiveConfigId(): Long
     @Query("UPDATE settings SET activeConfigId = :id WHERE id = 1")

@@ -6,6 +6,9 @@ data class Settings(
     val vpnAddresses: List<CIDR>,
     val vpnRoutes: List<CIDR>,
 
+    val selectedApps: List<String>,
+    val selectedAppsIsWhitelist: Boolean,
+
     val statsEnabled: Boolean,
     val statsEndpoint: String,
 

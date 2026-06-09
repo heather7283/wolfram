@@ -32,6 +32,8 @@ abstract class WolframDatabase : RoomDatabase() {
                         settings.create(SettingsEntity(
                             vpnAddressList = """[ "10.20.30.1/24" ]""",
                             vpnRouteList = """[ "0.0.0.0/0" ]""",
+                            selectedAppsList = """[]""",
+                            selectedAppsIsWhitelist = false,
                             activeConfigId = 0,
                             statsEnabled = true,
                             statsEndpoint = "127.0.0.1:54321",
