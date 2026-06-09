@@ -14,3 +14,6 @@ fun formatBytes(bytes: Long): String {
     if (mb < 1024) return "${DecimalFormat("0.#").format(mb)} MB"
     return "${DecimalFormat("0.#").format(mb / 1024.0)} GB"
 }
+
+// A -> B
+infix fun Boolean.implies(other: Boolean) = (!this || other)
