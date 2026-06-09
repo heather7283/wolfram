@@ -19,9 +19,7 @@ kotlin {
 android {
     namespace = "io.github.heather7283.wolfram"
     compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
+        version = release(37)
     }
 
     defaultConfig {
@@ -90,7 +88,6 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
     implementation(libs.cardview.v7)
     implementation(libs.okhttp)
@@ -103,6 +100,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.composableTable)
+    ksp(libs.kotlinMetadataJvm)
     ksp(libs.hilt.compiler)
     ksp(libs.androidx.room.compiler)
 }
