@@ -36,7 +36,7 @@ class SettingsRepository @Inject constructor(app: Application) {
             ifLeft = { Timber.e(it, "Could not parse ${value} as list of strings"); emptyList() },
             ifRight = {
                 it.mapNotNull { cidrStr ->
-                    CIDR.parse(cidrStr).fold(
+                    CIDR.fromString(cidrStr).fold(
                         ifLeft = { Timber.e(it, "Could not parse ${cidrStr} as CIDR"); null },
                         ifRight = { it }
                     )
@@ -65,15 +65,29 @@ class SettingsRepository @Inject constructor(app: Application) {
         withContext(Dispatchers.IO) {
             val old = toCidrList(dao.getVpnAddressList())
             val new = old + listOf(cidr)
-            dao.updateVpnAddressList(fromCidrList(new))
+            dao.setVpnAddressList(fromCidrList(new))
         }
     }
-
     suspend fun removeVpnAddress(cidr: CIDR) = Either.catch {
         withContext(Dispatchers.IO) {
             val old = toCidrList(dao.getVpnAddressList())
             val new = old.filterNot { it == cidr }
-            dao.updateVpnAddressList(fromCidrList(new))
+            dao.setVpnAddressList(fromCidrList(new))
+        }
+    }
+
+    suspend fun addVpnRoute(cidr: CIDR) = Either.catch {
+        withContext(Dispatchers.IO) {
+            val old = toCidrList(dao.getVpnRouteList())
+            val new = old + listOf(cidr)
+            dao.setVpnRouteList(fromCidrList(new))
+        }
+    }
+    suspend fun removeVpnRoute(cidr: CIDR) = Either.catch {
+        withContext(Dispatchers.IO) {
+            val old = toCidrList(dao.getVpnRouteList())
+            val new = old.filterNot { it == cidr }
+            dao.setVpnRouteList(fromCidrList(new))
         }
     }
 
