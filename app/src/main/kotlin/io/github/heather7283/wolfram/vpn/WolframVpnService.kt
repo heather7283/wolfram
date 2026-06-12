@@ -242,7 +242,16 @@ class WolframVpnService : VpnService() {
             .setSession("Wolfram")
             .apply { settings.vpnAddresses.forEach { addAddress(it.ip, it.prefix) } }
             .apply { settings.vpnRoutes.forEach { addRoute(it.ip, it.prefix) } }
-            .addDisallowedApplication("io.github.heather7283.wolfram") // important loop protection
+            .apply {
+                if (settings.selectedAppsIsWhitelist) {
+                    settings.selectedApps
+                        .filterNot { it == "io.github.heather7283.wolfram" } // loop protection
+                        .forEach(::addAllowedApplication)
+                } else {
+                    settings.selectedApps.forEach(::addDisallowedApplication)
+                    addDisallowedApplication("io.github.heather7283.wolfram") // loop protection
+                }
+            }
             .establish()
     }
 

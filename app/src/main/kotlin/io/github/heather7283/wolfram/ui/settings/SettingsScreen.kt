@@ -1,6 +1,11 @@
 package io.github.heather7283.wolfram.ui.settings
 
+import android.graphics.drawable.Drawable
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -8,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,13 +25,18 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -42,9 +53,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.Popup
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import arrow.core.Either
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import io.github.heather7283.wolfram.utils.CIDR
 
@@ -105,6 +119,24 @@ private fun TextOption(
 }
 
 @Composable
+private fun StringOption(
+    string: String,
+    onDelete: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier.fillMaxWidth().height(24.dp),
+    ) {
+        Text(string)
+        IconButton(onClick = { onDelete(string) }) {
+            Icon(Icons.Default.Delete, contentDescription = "Delete")
+        }
+    }
+}
+
+@Composable
 private fun CidrOption(
     cidr: CIDR,
     onDelete: (cidr: CIDR) -> Unit,
@@ -118,6 +150,40 @@ private fun CidrOption(
         Text("${cidr.ip.hostAddress}/${cidr.prefix}")
         IconButton(onClick = { onDelete(cidr) }) {
             Icon(Icons.Default.Delete, contentDescription = "Delete")
+        }
+    }
+}
+
+@Composable
+private fun MultiChoiceOption(
+    title: String,
+    subtitle: String? = null,
+    options: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+        }
+        SingleChoiceSegmentedButtonRow {
+            options.forEachIndexed { index, string ->
+                SegmentedButton(
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = options.size
+                    ),
+                    onClick = { onSelect(index) },
+                    selected = index == selected,
+                    label = { Text(string) },
+                    modifier = modifier,
+                )
+            }
         }
     }
 }
@@ -179,6 +245,67 @@ private fun CidrInputPopup(
             }
         },
     )
+}
+
+@Composable
+private fun AppSelectPopup(
+    title: String,
+    apps: List<AppInfo>,
+    onConfirm: (AppInfo) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(modifier = Modifier.padding(4.dp, 24.dp, 4.dp, 96.dp)) {
+            Card {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(8.dp),
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        items(apps) { app ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = { onConfirm(app) },
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(8.dp),
+                                ) {
+                                    // are we for real? https://stackoverflow.com/a/78640640
+                                    Image(
+                                        painter = rememberDrawablePainter(app.icon),
+                                        contentDescription = "Application icon",
+                                        modifier = Modifier.size(36.dp),
+                                    )
+                                    Column(horizontalAlignment = Alignment.Start) {
+                                        Text(
+                                            text = app.name,
+                                            maxLines = 1,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                        )
+                                        Text(
+                                            text = app.packageName,
+                                            maxLines = 1,
+                                            style = MaterialTheme.typography.labelMedium,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -259,6 +386,67 @@ private fun VpnRoutesSection(
 }
 
 @Composable
+private fun SelectedAppsSection(
+    apps: List<AppInfo>,
+    isWhitelist: Boolean,
+    onToggleWhitelist: (Boolean) -> Unit,
+    onAdd: () -> Unit,
+    onDelete: (AppInfo) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SettingsSection(
+        title = "Application proxy",
+        button = {
+            IconButton(onClick = onAdd) {
+                Icon(Icons.Default.Add, contentDescription = "Add application")
+            }
+        },
+        modifier = modifier,
+    ) {
+        Column {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                MultiChoiceOption(
+                    title = "Mode",
+                    options = listOf("Whitelist", "Blacklist"),
+                    selected = if (isWhitelist) { 0 } else { 1 },
+                    onSelect = { onToggleWhitelist(when (it) { 0 -> true; else -> false }) },
+                )
+            }
+            apps.forEach { app ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(8.dp),
+                ) {
+                    Image(
+                        painter = rememberDrawablePainter(app.icon),
+                        contentDescription = "Application icon",
+                        modifier = Modifier.size(36.dp),
+                    )
+                    Column(horizontalAlignment = Alignment.Start, modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = app.name,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Text(
+                            text = app.packageName,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                    IconButton(onClick = { onDelete(app) }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Remove application")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun SettingsScreen(
     navBar: @Composable () -> Unit,
     navActions: WolframNavigationActions,
@@ -267,6 +455,7 @@ fun SettingsScreen(
     val vm: SettingsViewModel = hiltViewModel()
     val settings by vm.settings.collectAsStateWithLifecycle(null)
     val state by vm.uiState.collectAsStateWithLifecycle()
+    val apps by vm.apps.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
@@ -329,6 +518,21 @@ fun SettingsScreen(
                 )
 
                 HorizontalDivider()
+
+                SelectedAppsSection(
+                    apps = apps.filter { it.selected },
+                    isWhitelist = settings.selectedAppsIsWhitelist,
+                    onToggleWhitelist = vm::setSelectedAppsIsWhitelist,
+                    onAdd = {
+                        vm.openAppsPopup(
+                            title = "Select application",
+                            onConfirm = { vm.addSelectedApp(it) },
+                        )
+                    },
+                    onDelete = { vm.removeSelectedApp(it) },
+                )
+
+                HorizontalDivider()
             }
         }
     }
@@ -339,6 +543,12 @@ fun SettingsScreen(
             title = popup.title,
             initialIp = popup.ip,
             initialPrefix = popup.prefix,
+            onConfirm = popup.onConfirm,
+            onDismiss = vm::closePopup,
+        )
+        is SettingsPopup.Apps -> AppSelectPopup(
+            title = popup.title,
+            apps = apps.filter { !it.selected },
             onConfirm = popup.onConfirm,
             onDismiss = vm::closePopup,
         )

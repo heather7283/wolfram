@@ -100,6 +100,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.composableTable)
+    implementation(libs.accompanist)
     ksp(libs.kotlinMetadataJvm)
     ksp(libs.hilt.compiler)
     ksp(libs.androidx.room.compiler)
