@@ -192,6 +192,7 @@ class WolframVpnService : VpnService() {
                 .build()
 
             while (true) {
+                delay(settings.statsPollInterval.seconds)
                 if (!_running.value) {
                     break
                 }
@@ -215,7 +216,6 @@ class WolframVpnService : VpnService() {
                         ifRight = { XrayStatsOption.Success(it) }
                     )
                 }
-                delay(5.seconds) // TODO: configurable
             }
         }
         scope.launch {

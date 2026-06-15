@@ -41,7 +41,8 @@ interface SettingsDao {
 
     @Query("UPDATE settings SET statsEnabled = :enabled WHERE id = 1")
     suspend fun setStatsEnabled(enabled: Boolean)
-
     @Query("UPDATE settings SET statsEndpoint = :endpoint WHERE id = 1")
     suspend fun setStatsEndpoint(endpoint: String)
+    @Query("UPDATE settings SET statsPollInterval = :seconds WHERE id = 1")
+    suspend fun setStatsPollInterval(seconds: Int)
 }

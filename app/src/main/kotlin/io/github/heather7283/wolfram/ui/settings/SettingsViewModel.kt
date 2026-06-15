@@ -39,6 +39,8 @@ data class SettingsUiState(
     val popup: SettingsPopup = SettingsPopup.Inactive,
     val statsEndpointModified: Boolean = false,
     val statsEndpointText: String = "",
+    val statsPollIntervalModified: Boolean = false,
+    val statsPollIntervalValue: Int = 0,
 )
 
 data class AppInfo(
@@ -165,6 +167,17 @@ class SettingsViewModel @Inject constructor(
         settingsRepository.setStatsEndpoint(_uiState.value.statsEndpointText).onRight {
             _uiState.update {
                 it.copy(statsEndpointModified = false)
+            }
+        }
+    }
+
+    fun onStatsPollIntervalValueChange(value: Int) = _uiState.update {
+        it.copy(statsPollIntervalModified = true, statsPollIntervalValue = value)
+    }
+    fun onStatsPollIntervalSave() = viewModelScope.launch {
+        settingsRepository.setStatsPollInterval(_uiState.value.statsPollIntervalValue).onRight {
+            _uiState.update {
+                it.copy(statsPollIntervalModified = false)
             }
         }
     }

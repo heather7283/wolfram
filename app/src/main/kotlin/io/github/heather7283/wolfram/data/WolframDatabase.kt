@@ -37,6 +37,7 @@ abstract class WolframDatabase : RoomDatabase() {
                             activeConfigId = 0,
                             statsEnabled = true,
                             statsEndpoint = "127.0.0.1:54321",
+                            statsPollInterval = 5,
                         ))
 
                         val geoFiles = db.geoFileDao()

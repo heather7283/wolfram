@@ -25,6 +25,7 @@ class SettingsRepository @Inject constructor(app: Application) {
         activeConfigId = e.activeConfigId,
         statsEnabled = e.statsEnabled,
         statsEndpoint = e.statsEndpoint,
+        statsPollInterval = e.statsPollInterval,
     )
 
     val settingsFlow = dao.observeAll().map(::toSettings)
@@ -123,10 +124,14 @@ class SettingsRepository @Inject constructor(app: Application) {
             dao.setStatsEnabled(enabled)
         }
     }
-
     suspend fun setStatsEndpoint(endpoint: String) = Either.catch {
         withContext(Dispatchers.IO) {
             dao.setStatsEndpoint(endpoint)
+        }
+    }
+    suspend fun setStatsPollInterval(seconds: Int) = Either.catch {
+        withContext(Dispatchers.IO) {
+            dao.setStatsPollInterval(seconds)
         }
     }
 }

@@ -11,6 +11,7 @@ data class Settings(
 
     val statsEnabled: Boolean,
     val statsEndpoint: String,
+    val statsPollInterval: Int,
 
     val activeConfigId: Long,
 )

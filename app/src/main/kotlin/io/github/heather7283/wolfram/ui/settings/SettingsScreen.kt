@@ -86,6 +86,40 @@ fun ToggleOption(
 }
 
 @Composable
+private fun IntOption(
+    title: String,
+    value: Int,
+    modified: Boolean,
+    onValueChange: (Int) -> Unit,
+    onSave: () -> Unit,
+    placeholder: String = "",
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(title, style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.height(4.dp))
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                value = value.toString(),
+                onValueChange = { onValueChange(it.toIntOrNull() ?: 0) },
+                placeholder = { Text(placeholder) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            )
+            if (modified) {
+                Spacer(Modifier.width(8.dp))
+                FilledIconButton(onClick = onSave) {
+                    Icon(Icons.Default.Save, "Save")
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun TextOption(
     title: String,
     value: String,
@@ -486,6 +520,17 @@ fun SettingsScreen(
                             modified = state.statsEndpointModified,
                             onValueChange = { vm.onStatsEndpointValueChange(it) },
                             onSave = { vm.onStatsEndpointSave() },
+                        )
+                        IntOption(
+                            title = "Poll interval",
+                            value = if (state.statsPollIntervalModified) {
+                                state.statsPollIntervalValue
+                            } else {
+                                settings.statsPollInterval
+                            },
+                            modified = state.statsPollIntervalModified,
+                            onValueChange = vm::onStatsPollIntervalValueChange,
+                            onSave = vm::onStatsPollIntervalSave,
                         )
                     }
                 }
