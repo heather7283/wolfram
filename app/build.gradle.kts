@@ -9,13 +9,6 @@ plugins {
     alias(libs.plugins.serialization)
 }
 
-kotlin {
-    compilerOptions {
-        // needed for arrow
-        freeCompilerArgs.add("-Xcontext-parameters")
-    }
-}
-
 android {
     namespace = "io.github.heather7283.wolfram"
     compileSdk {
