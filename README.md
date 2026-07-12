@@ -6,6 +6,13 @@ Proxy client for android based on [Xray-core], inspired by [SimpleXray].
 > The author does not condone or promote any unlawful activities.
 > Make sure you comply with the local law when using this project.
 
+## Why?
+I wanted a dumb wrapper around Xray-core for android that won't get in my way.
+
+Unlike the aforementioned project that relies on a tun2socks library,
+Wolfram uses Xray-core's TUN inbound feature to directly interact with
+Android's VpnService API, which should be more efficient in theory.
+
 ## TODOs:
 - [ ] Make it look good
 - [ ] Add quick settings menu widget
@@ -15,6 +22,7 @@ Proxy client for android based on [Xray-core], inspired by [SimpleXray].
 - [ ] Balancer stats support
 - [ ] Improve config editor (validation, syntax, indent, kb for json chars)
 - [ ] Modular configs (maybe?)
+- [ ] Templated configs (maybe?)
 - [ ] Improve logs display (search, freeze, export, highlight?)
 
 ## References:
