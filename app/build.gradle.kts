@@ -30,7 +30,13 @@ android {
         }
 
         ndk {
-            abiFilters project.hasProperty('abiFilters') ? [project.property('abiFilters')] : ['arm64-v8a', 'x86_64']
+            val abiFilterProp = project.findProperty("abiFilters") as String?
+            abiFilters.clear()
+            if (abiFilterProp != null) {
+                abiFilters.add(abiFilterProp)
+            } else {
+                abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
+            }
         }
     }
     buildTypes {
