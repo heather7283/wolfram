@@ -28,8 +28,11 @@ android {
                 cppFlags += ""
             }
         }
-    }
 
+        ndk {
+            abiFilters project.hasProperty('abiFilters') ? [project.property('abiFilters')] : ['arm64-v8a', 'x86_64']
+        }
+    }
     buildTypes {
         release {
             // https://developer.android.com/reference/kotlin/androidx/compose/material/icons
