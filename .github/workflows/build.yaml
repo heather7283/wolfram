@@ -24,7 +24,7 @@ jobs:
 
       - name: Download Xray-core binary
         run: |
-          set -eu
+          set -eux
 
           abi=${{ matrix.abi }}
           case "$abi" in
@@ -36,7 +36,7 @@ jobs:
 
           mkdir -p "app/src/main/jniLibs/${abi}"
           cd "app/src/main/jniLibs/${abi}"
-          curl -fsSL "$url" | tar -x xray
+          curl -fsSL "$url" | bsdtar -x xray
           mv xray libxray.so
           chmod +x libxray.so
 
