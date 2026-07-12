@@ -65,17 +65,10 @@ jobs:
         id: locate
         run: |
           mkdir -p artifact-output
-          find app/build/outputs/apk \
+          find app/build/outputs/apk/${{ matrix.build_type }} \
             -type f \
-            -name "*${{ matrix.abi }}*${{ matrix.build_type }}*.apk" \
+            -name "*.apk" \
             -exec cp {} artifact-output/ \;
-          # Fallback: if ABI isn't in the filename (e.g. universal splits disabled),
-          # just grab everything matching the build type.
-          if [ -z "$(ls -A artifact-output)" ]; then
-            find app/build/outputs/apk/${{ matrix.build_type }} -type f -name "*.apk" \
-              -exec cp {} artifact-output/ \;
-          fi
-          ls -la artifact-output
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
