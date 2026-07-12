@@ -22,6 +22,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install bsdtar
+        run: sudo apt install -y libarchive-tools
+
       - name: Download Xray-core binary
         run: |
           set -eux
