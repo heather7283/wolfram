@@ -87,17 +87,15 @@ fun AssetsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier,
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(
+            modifier = Modifier.padding(innerPadding).padding(16.dp).fillMaxSize(),
+        ) {
             if (geoFiles.isEmpty()) {
                 EmptyState(modifier = Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = 16.dp,
-                        vertical = 12.dp
-                    )
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(geoFiles, key = { it.name }) { geoFile ->
                         GeoFileCard(

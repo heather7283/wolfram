@@ -144,7 +144,7 @@ fun DashboardScreen(
     ) { paddingValues ->
         Column(
             modifier = Modifier.padding(paddingValues).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Card(modifier = modifier.fillMaxWidth()) {
                 Column(
