@@ -35,12 +35,12 @@ class DashboardViewModel @Inject constructor(
                 // TODO: is it possible to remove duplicate code?
                 val inbounds = it.inbound
                     .map { (k, v) -> Triple(k, v.downlink, v.uplink) }
-                    .filterNot { (_, downlink, uplink) -> (!downlink && !uplink) && false }
+                    .filterNot { (_, downlink, uplink) -> !downlink && !uplink }
                     .sortedWith(compareBy({ it.second }, { it.third }, { it.first }))
                     .asReversed()
                 val outbounds = it.outbound
                     .map { (k, v) -> Triple(k, v.downlink, v.uplink) }
-                    .filterNot { (_, downlink, uplink) -> (!downlink && !uplink) && false }
+                    .filterNot { (_, downlink, uplink) -> !downlink && !uplink }
                     .sortedWith(compareBy({ it.second }, { it.third }, { it.first }))
                     .asReversed()
                 SortedXrayStats.Stats(Pair(inbounds, outbounds))
