@@ -4,12 +4,15 @@ import android.app.Activity
 import android.net.VpnService
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
@@ -24,47 +27,61 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sunnychung.lib.android.composabletable.ux.Table
 import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import io.github.heather7283.wolfram.utils.formatBytes
-import io.github.heather7283.wolfram.utils.not
 
 @Composable
-private fun Cell(
+private fun RowScope.TableCell(
     text: String,
+    weight: Float,
+    isHeader: Boolean = false
 ) {
-    Box(modifier = Modifier.border(width = 1.dp, color = Color.Gray)) {
-        Text(text = text, modifier = Modifier.padding(4.dp))
-    }
+    Text(
+        text = text,
+        fontWeight = if (isHeader) FontWeight.Bold else FontWeight.Normal,
+        modifier = Modifier.border(Dp.Hairline, Color.Gray).weight(weight).padding(8.dp),
+        maxLines = 1,
+        overflow = TextOverflow.MiddleEllipsis,
+    )
 }
 
 @Composable
-private fun StatsInOut(
-    label: String,
-    stats: List<Triple<String, Long, Long>>,
-    modifier: Modifier = Modifier
+private fun Table(
+    rows: Int,
+    columns: Int,
+    headers: List<String>,
+    weights: List<Float>,
+    items: (row: Int, col: Int) -> String,
 ) {
-    Table(
-        rowCount = stats.size + 1,
-        columnCount = 3,
-        modifier = modifier.fillMaxWidth(),
-    ) { row, column ->
-        when (column) {
-            0 -> Cell(if (!row) { label } else { stats[row - 1].first })
-            1 -> Cell(if (!row) { "downlink" } else { formatBytes(stats[row - 1].second) })
-            2 -> Cell(if (!row) { "uplink" } else { formatBytes(stats[row - 1].third) })
+    LazyColumn {
+        stickyHeader {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                headers.forEachIndexed { column, header ->
+                    TableCell(header, weight = weights[column], isHeader = true)
+                }
+            }
+        }
+        items(rows) { row ->
+            Row(modifier = Modifier.fillMaxWidth()) {
+                for (column in 0..<columns) {
+                    TableCell(items(row, column), weight = weights[column])
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun Stats(stats: SortedXrayStats, modifier: Modifier = Modifier) {
+private fun CoreStats(stats: SortedXrayStats, modifier: Modifier = Modifier) {
     Card(modifier = modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text("Traffic", style = MaterialTheme.typography.headlineSmall)
@@ -78,20 +95,43 @@ private fun Stats(stats: SortedXrayStats, modifier: Modifier = Modifier) {
                         return@also
                     }
 
-                    if (!inbound.isEmpty()) {
-                        Column() {
-                            Text("Inbounds")
-                            StatsInOut("Inbound", inbound)
+                    @Composable fun showTable(
+                        direction: String,
+                        stats: List<Triple<String, Long, Long>>,
+                    ) = Table(
+                        rows = stats.size,
+                        columns = 3,
+                        weights = listOf(1.5f, 1f, 1f),
+                        headers = listOf(direction, "Downlink", "Uplink"),
+                    ) { row, col ->
+                        when (col) {
+                            0 -> stats[row].first
+                            1 -> formatBytes(stats[row].second)
+                            else -> formatBytes(stats[row].third)
                         }
                     }
+
+                    if (!inbound.isEmpty()) {
+                        showTable("Inbound", inbound)
+                    }
                     if (!outbound.isEmpty()) {
-                        Column() {
-                            Text("Outbounds")
-                            StatsInOut("Outbound", outbound)
-                        }
+                        showTable("Outbound", outbound)
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CoreStatus(running: Boolean, modifier: Modifier = Modifier) {
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text("Status", style = MaterialTheme.typography.headlineSmall)
+            Text("Core is " + if (running) { "running" } else { "not running" })
         }
     }
 }
@@ -146,16 +186,8 @@ fun DashboardScreen(
             modifier = Modifier.padding(paddingValues).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Card(modifier = modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text("Status", style = MaterialTheme.typography.headlineSmall)
-                    Text("Core is " + if (running.value) { "running" } else { "not running" })
-                }
-            }
-            Stats(stats.value)
+            CoreStatus(running.value)
+            CoreStats(stats.value)
         }
     }
 }
