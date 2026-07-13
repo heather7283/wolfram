@@ -28,13 +28,8 @@ android {
         }
 
         ndk {
-            val abiFilterProp = project.findProperty("abiFilters") as String?
             abiFilters.clear()
-            if (abiFilterProp != null) {
-                abiFilters.add(abiFilterProp)
-            } else {
-                abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
-            }
+            abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
         }
     }
     buildTypes {
@@ -67,6 +62,14 @@ android {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
             version = "3.22.1"
+        }
+    }
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "x86_64")
+            isUniversalApk = false
         }
     }
 }
