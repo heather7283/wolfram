@@ -74,7 +74,7 @@ android {
 }
 
 room {
-    schemaDirectory("${buildDir}/schemas")
+    schemaDirectory("${rootDir}/app/src/main/roomSchemas")
 }
 
 dependencies {

@@ -15,7 +15,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities=[GeoFile::class, SettingsEntity::class, XrayConfigEntity::class], version=1)
+@Database(
+    version = 1,
+    entities = [GeoFile::class, SettingsEntity::class, XrayConfigEntity::class],
+)
 abstract class WolframDatabase : RoomDatabase() {
     abstract fun geoFileDao(): GeoFileDao
     abstract fun settingsDao(): SettingsDao
