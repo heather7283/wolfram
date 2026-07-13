@@ -1,13 +1,16 @@
 package io.github.heather7283.wolfram.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
+import androidx.room.DeleteColumn
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.AutoMigrationSpec
 import androidx.sqlite.SQLiteConnection
 import io.github.heather7283.wolfram.data.config.XrayConfigDao
 import io.github.heather7283.wolfram.data.config.XrayConfigEntity
-import io.github.heather7283.wolfram.data.geofile.GeoFile
+import io.github.heather7283.wolfram.data.geofile.GeoFileEntity
 import io.github.heather7283.wolfram.data.geofile.GeoFileDao
 import io.github.heather7283.wolfram.data.settings.SettingsDao
 import io.github.heather7283.wolfram.data.settings.SettingsEntity
@@ -16,13 +19,28 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    version = 1,
-    entities = [GeoFile::class, SettingsEntity::class, XrayConfigEntity::class],
+    version = 2,
+    exportSchema = true,
+    entities = [
+        GeoFileEntity::class,
+        SettingsEntity::class,
+        XrayConfigEntity::class
+   ],
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2, spec = WolframDatabase.AutoMigrationFrom1To2::class),
+    ]
 )
 abstract class WolframDatabase : RoomDatabase() {
     abstract fun geoFileDao(): GeoFileDao
     abstract fun settingsDao(): SettingsDao
     abstract fun xrayConfigDao(): XrayConfigDao
+
+    @DeleteColumn.Entries(
+        DeleteColumn(tableName = "geofiles", columnName = "existsLocally"),
+        DeleteColumn(tableName = "geofiles", columnName = "lastUpdated"),
+        DeleteColumn(tableName = "geofiles", columnName = "size"),
+    )
+    class AutoMigrationFrom1To2 : AutoMigrationSpec
 
     companion object {
         val callback = object : Callback() {
@@ -44,11 +62,11 @@ abstract class WolframDatabase : RoomDatabase() {
                         ))
 
                         val geoFiles = db.geoFileDao()
-                        geoFiles.insert(GeoFile(
+                        geoFiles.insert(GeoFileEntity(
                             name = "geoip.dat",
                             url = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat",
                         ))
-                        geoFiles.insert(GeoFile(
+                        geoFiles.insert(GeoFileEntity(
                             name = "geosite.dat",
                             url = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat",
                         ))

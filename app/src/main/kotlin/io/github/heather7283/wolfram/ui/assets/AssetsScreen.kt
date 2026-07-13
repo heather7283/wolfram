@@ -53,9 +53,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.heather7283.wolfram.data.geofile.GeoFile
+import io.github.heather7283.wolfram.data.geofile.GeoFileEntity
 import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
+import java.time.ZonedDateTime
 import java.util.Date
 import java.util.Locale
 
@@ -66,7 +68,7 @@ fun AssetsScreen(
     modifier: Modifier = Modifier,
 ) {
     val viewModel: GeoFileViewModel = hiltViewModel()
-    val geoFiles by viewModel.geoFiles.collectAsStateWithLifecycle()
+    val geoFiles by viewModel.geoFilesEntity.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -102,8 +104,8 @@ fun AssetsScreen(
                             geoFile = geoFile,
                             isDownloading = geoFile.name in uiState.downloadingNames,
                             onEdit = { viewModel.showEditDialog(geoFile) },
-                            onDelete = { viewModel.delete(geoFile) },
-                            onDownload = { viewModel.download(geoFile) },
+                            onDelete = { viewModel.delete(geoFile.name) },
+                            onDownload = { viewModel.download(geoFile.name) },
                         )
                     }
                 }
@@ -124,7 +126,7 @@ fun AssetsScreen(
             title = "Edit geofile",
             initialName = dialog.target.name,
             initialUrl = dialog.target.url,
-            onConfirm = { name, url -> viewModel.edit(dialog.target, name, url) },
+            onConfirm = { name, url -> viewModel.edit(dialog.target.name, name, url) },
             onDismiss = viewModel::dismissDialog,
         )
     }
@@ -169,7 +171,7 @@ private fun GeoFileCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     if (geoFile.existsLocally) {
                         MetaChip(label = "Size", value = formatBytes(geoFile.size!!))
-                        MetaChip(label = "Updated", value = formatDate(Date(geoFile.lastUpdated!!)))
+                        MetaChip(label = "Updated", value = formatDate(geoFile.mtime!!))
                     } else {
                         Text("Not downloaded")
                     }
@@ -300,4 +302,4 @@ private fun formatBytes(bytes: Long): String {
 }
 
 private val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
-private fun formatDate(date: Date): String = dateFormat.format(date)
+private fun formatDate(date: ZonedDateTime): String = dateFormat.format(date)

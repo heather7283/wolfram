@@ -4,6 +4,9 @@ import android.app.Application
 import arrow.core.Either
 import io.github.heather7283.wolfram.data.WolframDatabase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -12,10 +15,12 @@ import okio.use
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
-import java.util.Date
+import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.io.path.exists
 import kotlin.io.path.fileSize
+import kotlin.io.path.getLastModifiedTime
 import kotlin.io.path.outputStream
 
 @Singleton
@@ -23,28 +28,46 @@ class GeoFileRepository @Inject constructor(app: Application) {
     private val dao = WolframDatabase.getInstance(app.applicationContext).geoFileDao()
     private val http = OkHttpClient()
 
-    val geoFilesDir: Path = app.filesDir.toPath().resolve("geofiles").also {
-        Files.createDirectories(it)
-    }
+    val geoFilesDir: Path = app.filesDir.toPath().resolve("geofiles").also(Files::createDirectories)
     private fun pathFor(name: String) = geoFilesDir.resolve(name)
+    private fun GeoFileEntity.path() = pathFor(this.name)
     private fun GeoFile.path() = pathFor(this.name)
 
-    val geoFiles = dao.observeAll()
+    private val refreshTrigger = MutableSharedFlow<Unit>(replay = 1).apply { tryEmit(Unit) }
+    fun refreshGeoFiles() = refreshTrigger.tryEmit(Unit)
 
-    suspend fun add(name: String, url: String) = Either.catch {
-        withContext(Dispatchers.IO) {
-            dao.insert(GeoFile(
-                name = name,
-                url = url,
-                existsLocally = false,
-                lastUpdated = null,
-                size = null,
-            ))
+    val geoFiles = combine(dao.observeAll(), refreshTrigger) { entities, _ ->
+        entities
+    }.map { entities ->
+        entities.map { entity ->
+            val path = entity.path()
+            val exists = path.exists()
+            val size = if (!exists) null else {
+                path.fileSize()
+            }
+            val mtime = if (!exists) null else {
+                path.getLastModifiedTime().toInstant().atZone(ZoneId.systemDefault())
+            }
+            GeoFile(
+                name = entity.name,
+                url = entity.url,
+                existsLocally = exists,
+                size = size,
+                mtime = mtime,
+            )
         }
     }
 
-    suspend fun download(gf: GeoFile) = Either.catch {
+    suspend fun add(name: String, url: String) = Either.catch {
         withContext(Dispatchers.IO) {
+            dao.insert(GeoFileEntity(name = name, url = url))
+        }
+    }
+
+    suspend fun download(name: String) = Either.catch {
+        withContext(Dispatchers.IO) {
+            val gf = checkNotNull(dao.get(name))
+
             val targetFile = gf.path()
             val tempFile = pathFor("${gf.name}.tmp")
 
@@ -62,42 +85,34 @@ class GeoFileRepository @Inject constructor(app: Application) {
                 throw e
             }
 
-            dao.update(gf.copy(
-                existsLocally = true,
-                lastUpdated = Date().time,
-                size = targetFile.fileSize(),
-            ))
+            refreshGeoFiles()
         }
     }
 
-    suspend fun modify(old: GeoFile, name: String, url: String) = Either.catch {
+    suspend fun modify(oldName: String, name: String, url: String) = Either.catch {
         withContext(Dispatchers.IO) {
+            val old = checkNotNull(dao.get(oldName))
+
             if (old.name != name) {
                 require (dao.get(name) == null) { "geofile ${name} already exists" }
-                if (old.existsLocally) {
+                if (old.path().exists()) {
                     Files.move(old.path(), pathFor(name))
                 }
-                dao.delete(old)
-                dao.insert(old.copy(name = name))
+                dao.delete(oldName)
+                dao.insert(GeoFileEntity(name, url))
             }
 
             if (old.url != url) {
                 // changed url so need redownload
                 Files.deleteIfExists(pathFor(name))
-                dao.update(old.copy(
-                    name = name,
-                    url = url,
-                    existsLocally = false,
-                    lastUpdated = null,
-                    size = null,
-                ))
+                refreshGeoFiles()
             }
         }
     }
 
-    suspend fun delete(old: GeoFile) = Either.catch {
+    suspend fun delete(old: String) = Either.catch {
         withContext(Dispatchers.IO) {
-            Files.deleteIfExists(old.path())
+            Files.deleteIfExists(pathFor(old))
             dao.delete(old)
         }
     }

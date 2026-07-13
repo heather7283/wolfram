@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.heather7283.wolfram.data.geofile.GeoFile
+import io.github.heather7283.wolfram.data.geofile.GeoFileEntity
 import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -32,7 +33,7 @@ class GeoFileViewModel @Inject constructor(
     private val repo: GeoFileRepository
 ) : ViewModel() {
 
-    val geoFiles: StateFlow<List<GeoFile>> = repo.geoFiles
+    val geoFilesEntity: StateFlow<List<GeoFile>> = repo.geoFiles
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _uiState = MutableStateFlow(GeoFileUiState())
@@ -64,9 +65,9 @@ class GeoFileViewModel @Inject constructor(
         dismissDialog()
     }
 
-    fun edit(old: GeoFile, name: String, url: String) {
+    fun edit(oldName: String, name: String, url: String) {
         viewModelScope.launch {
-            repo.modify(old, name.trim(), url.trim()).onLeft { err ->
+            repo.modify(oldName, name.trim(), url.trim()).onLeft { err ->
                 Timber.e(err)
                 _uiState.update { it.copy(errorMessage = err.message ?: "Failed to edit geo file") }
             }
@@ -74,26 +75,28 @@ class GeoFileViewModel @Inject constructor(
         dismissDialog()
     }
 
-    fun download(geoFile: GeoFile) {
-        if (_uiState.value.downloadingNames.contains(geoFile.name)) return
-        _uiState.update { it.copy(downloadingNames = it.downloadingNames + geoFile.name) }
+    fun download(name: String) {
+        if (_uiState.value.downloadingNames.contains(name)) return
+        _uiState.update { it.copy(downloadingNames = it.downloadingNames + name) }
         viewModelScope.launch {
-            repo.download(geoFile)
+            repo.download(name)
                 .onLeft { err ->
                     Timber.e(err)
                     _uiState.update {
-                        it.copy(errorMessage = err.message ?: "Download failed for ${geoFile.name}")
+                        it.copy(errorMessage = err.message ?: "Download failed for ${name}")
                     }
                 }
-            _uiState.update { it.copy(downloadingNames = it.downloadingNames - geoFile.name) }
+            _uiState.update { it.copy(downloadingNames = it.downloadingNames - name) }
         }
     }
 
-    fun delete(geoFile: GeoFile) {
+    fun delete(name: String) {
         viewModelScope.launch {
-            repo.delete(geoFile).onLeft { err ->
+            repo.delete(name).onLeft { err ->
                 Timber.e(err)
-                _uiState.update { it.copy(errorMessage = err.message ?: "Failed to delete geo file") }
+                _uiState.update {
+                    it.copy(errorMessage = err.message ?: "Failed to delete geofile ${name}")
+                }
             }
         }
     }

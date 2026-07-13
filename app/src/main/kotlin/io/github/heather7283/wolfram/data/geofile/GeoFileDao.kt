@@ -11,17 +11,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface GeoFileDao {
     @Query("SELECT * FROM geofiles")
-    fun observeAll(): Flow<List<GeoFile>>
+    fun observeAll(): Flow<List<GeoFileEntity>>
 
     @Query("SELECT * FROM geofiles WHERE name = :name")
-    suspend fun get(name: String): GeoFile?
+    suspend fun get(name: String): GeoFileEntity?
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(geoFile: GeoFile)
+    suspend fun insert(geoFileEntity: GeoFileEntity)
 
-    @Update
-    suspend fun update(geoFile: GeoFile): Int
-
-    @Delete
-    suspend fun delete(geoFile: GeoFile): Int
+    @Query("DELETE FROM geofiles WHERE name = :name")
+    suspend fun delete(name: String): Int
 }
