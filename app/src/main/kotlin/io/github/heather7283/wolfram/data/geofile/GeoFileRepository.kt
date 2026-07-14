@@ -39,6 +39,8 @@ class GeoFileRepository @Inject constructor(app: Application) {
     val geoFiles = combine(dao.observeAll(), refreshTrigger) { entities, _ ->
         entities
     }.map { entities ->
+        val timezone = ZoneId.systemDefault()
+
         entities.map { entity ->
             val path = entity.path()
             val exists = path.exists()
@@ -46,7 +48,7 @@ class GeoFileRepository @Inject constructor(app: Application) {
                 path.fileSize()
             }
             val mtime = if (!exists) null else {
-                path.getLastModifiedTime().toInstant().atZone(ZoneId.systemDefault())
+                path.getLastModifiedTime().toInstant().atZone(timezone).toLocalDateTime()
             }
             GeoFile(
                 name = entity.name,

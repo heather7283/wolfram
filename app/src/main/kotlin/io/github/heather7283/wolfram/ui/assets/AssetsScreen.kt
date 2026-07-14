@@ -57,7 +57,9 @@ import io.github.heather7283.wolfram.data.geofile.GeoFileEntity
 import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -301,5 +303,5 @@ private fun formatBytes(bytes: Long): String {
     return "${DecimalFormat("0.#").format(mb / 1024.0)} GB"
 }
 
-private val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
-private fun formatDate(date: ZonedDateTime): String = dateFormat.format(date)
+private val dateFormat = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm")
+private fun formatDate(date: LocalDateTime): String = date.format(dateFormat)
