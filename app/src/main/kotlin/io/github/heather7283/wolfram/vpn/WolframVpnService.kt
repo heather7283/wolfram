@@ -17,6 +17,7 @@ import io.github.heather7283.wolfram.data.config.XrayConfigRepository
 import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
 import io.github.heather7283.wolfram.data.settings.Settings
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
+import io.github.heather7283.wolfram.data.xray.XrayStats
 import io.github.heather7283.wolfram.data.xray.XrayStatsOption
 import io.github.heather7283.wolfram.data.xray.parseXrayStats
 import kotlinx.coroutines.CoroutineScope
@@ -186,6 +187,7 @@ class WolframVpnService : VpnService() {
                 _stats.update { XrayStatsOption.Idle }
                 return@launch
             }
+            _stats.update { XrayStatsOption.Success(XrayStats()) }
 
             val http = OkHttpClient.Builder()
                 .callTimeout(1.seconds)
