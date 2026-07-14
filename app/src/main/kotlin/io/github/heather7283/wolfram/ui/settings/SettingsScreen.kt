@@ -1,5 +1,7 @@
 package io.github.heather7283.wolfram.ui.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -483,6 +485,12 @@ fun SettingsScreen(
     val state by vm.uiState.collectAsStateWithLifecycle()
     val apps by vm.apps.collectAsStateWithLifecycle()
 
+    val createDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/vnd.sqlite3"),
+    ) { uri ->
+        uri?.let { vm.onBackupLocationSelected(uri) }
+    }
+
     Scaffold(
         modifier = modifier,
         bottomBar = navBar,
@@ -570,6 +578,14 @@ fun SettingsScreen(
                 )
 
                 HorizontalDivider()
+
+                Button(
+                    onClick = {
+                        createDocumentLauncher.launch("wolfram-settings.bak")
+                    }
+                ) {
+                    Text("Backup settings")
+                }
             }
         }
     }

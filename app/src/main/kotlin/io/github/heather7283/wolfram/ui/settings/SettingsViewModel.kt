@@ -4,9 +4,11 @@ import android.app.Application
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.heather7283.wolfram.data.backup.BackupRepository
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
 import io.github.heather7283.wolfram.utils.CIDR
 import io.github.heather7283.wolfram.utils.not
@@ -52,6 +54,7 @@ data class AppInfo(
 class SettingsViewModel @Inject constructor(
     private val app: Application,
     private val settingsRepository: SettingsRepository,
+    private val backupRepository: BackupRepository,
 ) : ViewModel() {
     val settings = settingsRepository.settingsFlow
 
@@ -177,6 +180,12 @@ class SettingsViewModel @Inject constructor(
             _uiState.update {
                 it.copy(statsPollIntervalModified = false)
             }
+        }
+    }
+
+    fun onBackupLocationSelected(uri: Uri) = viewModelScope.launch {
+        backupRepository.backupDatabaseToUri(uri).onLeft {
+            Timber.e(it)
         }
     }
 }
