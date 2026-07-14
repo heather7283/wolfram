@@ -81,8 +81,7 @@ abstract class WolframDatabase : RoomDatabase() {
                                 "tag": "metrics",
                                 "listen": "127.0.0.1:54321"
                               },
-                              "stats": {
-                              },
+                              "stats": {},
                               "policy": {
                                 "system": {
                                   "statsInboundUplink": true,
@@ -90,18 +89,6 @@ abstract class WolframDatabase : RoomDatabase() {
                                   "statsOutboundUplink": true,
                                   "statsOutboundDownlink": true
                                 }
-                              },
-                              "dns": {
-                                "hosts": {
-                                  "dns.google": [ "8.8.8.8", "8.8.4.4" ],
-                                  "one.one.one.one": [ "1.1.1.1", "1.0.0.1" ],
-                                  "dns.quad9.net": [ "9.9.9.9", "149.112.112.112" ]
-                                },
-                                "servers": [
-                                  "https+local://dns.google/dns-query",
-                                  "https+local://one.one.one.one/dns-query",
-                                  "https+local://dns.quad9.net/dns-query"
-                                ]
                               },
                               "inbounds": [
                                 {
@@ -122,22 +109,8 @@ abstract class WolframDatabase : RoomDatabase() {
                                 {
                                   "tag": "direct-out",
                                   "protocol": "freedom"
-                                },
-                                {
-                                  "tag": "block",
-                                  "protocol": "blackhole"
                                 }
-                              ],
-                              "routing": {
-                                "domainStrategy": "AsIs",
-                                "rules": [
-                                  {
-                                    "ruleTag": "block-ads",
-                                    "domain": [ "geosite:category-ads-all" ],
-                                    "outboundTag": "block"
-                                  }
-                                ]
-                              }
+                              ]
                             }
                         """.trimIndent())
                     }
