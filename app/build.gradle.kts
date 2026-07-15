@@ -17,8 +17,13 @@ android {
         applicationId = "io.github.heather7283.wolfram"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+
+        // https://developer.android.com/studio/publish/versioning#versioningsettings
+        // max is 2100000000 (2^30 < 2100000000 < 2^31 so we can use 30 bits for version)
+        // 8 + 8 + 8 + 6 = 30
+        val (major, minor, patch, build) = arrayOf(0, 1, 0, 0)
+        versionCode = (major shl 22) or (minor shl 14) or (patch shl 6) or (build and 0b00111111)
+        versionName = "${major}.${minor}.${patch}" + if (build > 0) "-${build}" else ""
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
