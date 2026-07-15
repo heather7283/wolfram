@@ -34,6 +34,8 @@ android {
     }
     buildTypes {
         release {
+            // fuck off google, don't care + didn't ask + get tricked
+            signingConfig = signingConfigs.getByName("debug")
             // https://developer.android.com/reference/kotlin/androidx/compose/material/icons
             isMinifyEnabled = true
             isShrinkResources = true
