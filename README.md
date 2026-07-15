@@ -17,8 +17,8 @@ Android's VpnService API, which should be more efficient in theory.
 - [ ] Make it look good
 - [ ] Add quick settings menu widget
 - [ ] Add ability to download core binaries
-- [ ] Settings export/import
-- [ ] Database migration
+- [X] Settings export/import
+- [X] Database migration
 - [ ] Balancer stats support
 - [ ] Improve config editor (validation, syntax, indent, kb for json chars)
 - [ ] Modular configs (maybe?)
