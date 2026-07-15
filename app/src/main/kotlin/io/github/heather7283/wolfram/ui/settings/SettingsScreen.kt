@@ -642,7 +642,7 @@ fun SettingsScreen(
             onDismiss = vm::closePopup,
         )
         is SettingsPopup.Error -> ErrorPopup(
-            title = "Error",
+            title = popup.title,
             message = popup.message,
             onDismiss = vm::closePopup,
         )
