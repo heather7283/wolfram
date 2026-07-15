@@ -128,10 +128,9 @@ abstract class WolframDatabase : RoomDatabase() {
         }
 
         // thank you so much kind sir at https://blog.termian.dev/posts/room-on-upgrade/
-        class CorruptionCallback(
+        class OnCorruptionCallback(
             private val delegate: SupportSQLiteOpenHelper.Callback,
         ) : SupportSQLiteOpenHelper.Callback(delegate.version) {
-
             override fun onDowngrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
                 delegate.onDowngrade(db, oldVersion, newVersion)
             }
@@ -149,22 +148,21 @@ abstract class WolframDatabase : RoomDatabase() {
             }
 
             override fun onCorruption(db: SupportSQLiteDatabase) {
-                throw Exception("Database is corrupted")
+                throw Exception("Invalid or corrupted database")
             }
 
             override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
                 delegate.onUpgrade(db, oldVersion, newVersion)
             }
         }
-        class CorruptionOpenHelperFactory(
+        class OnCorruptionOpenHelperFactory(
             private val delegate: SupportSQLiteOpenHelper.Factory,
         ) : SupportSQLiteOpenHelper.Factory {
-
             override fun create(configuration: SupportSQLiteOpenHelper.Configuration): SupportSQLiteOpenHelper {
                 val decoratedConfiguration =
                     SupportSQLiteOpenHelper.Configuration.builder(configuration.context)
                         .name(configuration.name)
-                        .callback(CorruptionCallback(configuration.callback))
+                        .callback(OnCorruptionCallback(configuration.callback))
                         .build()
                 return delegate.create(decoratedConfiguration)
             }
@@ -172,13 +170,6 @@ abstract class WolframDatabase : RoomDatabase() {
 
         private val dbName = "wolfram"
         private var instance: WolframDatabase? = null
-
-        private fun deleteDatabaseFiles(ctx: Context) {
-            // I hate everything about this API https://stackoverflow.com/a/61530578
-            Files.deleteIfExists(ctx.getDatabasePath(dbName).toPath())
-            Files.deleteIfExists(File(ctx.getDatabasePath(dbName).absolutePath + "-wal").toPath())
-            Files.deleteIfExists(File(ctx.getDatabasePath(dbName).absolutePath + "-shm").toPath())
-        }
 
         fun getInstance(ctx: Context): WolframDatabase {
             instance?.let { return it }
@@ -208,11 +199,19 @@ abstract class WolframDatabase : RoomDatabase() {
             val newdb = ctx.dataDir.toPath().resolve("newdb")
             val olddb = ctx.dataDir.toPath().resolve("olddb")
 
+            // I hate everything about this API https://stackoverflow.com/a/61530578
+            fun deleteDatabaseFiles(ctx: Context) {
+                val dbPath = ctx.getDatabasePath(dbName)
+                Files.deleteIfExists(dbPath.toPath())
+                Files.deleteIfExists(File(dbPath.absolutePath + "-wal").toPath())
+                Files.deleteIfExists(File(dbPath.absolutePath + "-shm").toPath())
+            }
+
             try {
                 deleteDatabaseFiles(ctx)
                 val db = Room.databaseBuilder(ctx, WolframDatabase::class.java, dbName)
                     .addCallback(callback)
-                    .openHelperFactory(CorruptionOpenHelperFactory(
+                    .openHelperFactory(OnCorruptionOpenHelperFactory(
                         FrameworkSQLiteOpenHelperFactory()
                     ))
                     .createFromFile(newdb.toFile())
@@ -230,6 +229,7 @@ abstract class WolframDatabase : RoomDatabase() {
             }
 
             // if we got here, restoring the db failed. Nuke the files and try again with olddb
+            // room will automatically fall back on creating an empty db if olddb also fails
             deleteDatabaseFiles(ctx)
             return Room.databaseBuilder(ctx, WolframDatabase::class.java, dbName)
                 .addCallback(callback)
