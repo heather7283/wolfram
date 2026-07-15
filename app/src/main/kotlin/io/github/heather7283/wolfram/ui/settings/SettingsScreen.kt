@@ -337,6 +337,34 @@ private fun AppSelectPopup(
 }
 
 @Composable
+private fun ErrorPopup(
+    title: String,
+    message: String,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(message) },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("OK") } },
+        dismissButton = { /* no-op */ },
+    )
+}
+
+@Composable
+private fun RestartPopup(
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Restart") },
+        text = { Text("Restart application to apply new settings") },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("OK") } },
+        dismissButton = { /* no-op */ },
+    )
+}
+
+@Composable
 fun SettingsSection(
     modifier: Modifier = Modifier,
     title: String,
@@ -490,6 +518,11 @@ fun SettingsScreen(
     ) { uri ->
         uri?.let { vm.onBackupLocationSelected(uri) }
     }
+    val openDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        uri?.let { vm.onRestoreLocationSelected(uri) }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -579,12 +612,15 @@ fun SettingsScreen(
 
                 HorizontalDivider()
 
-                Button(
-                    onClick = {
-                        createDocumentLauncher.launch("wolfram-settings.bak")
-                    }
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
-                    Text("Backup settings")
+                    Button(onClick = { createDocumentLauncher.launch("wolfram-settings.bak") }) {
+                        Text("Backup settings")
+                    }
+                    Button(onClick = { openDocumentLauncher.launch(arrayOf("*/*")) }) {
+                        Text("Restore settings")
+                    }
                 }
             }
         }
@@ -604,6 +640,14 @@ fun SettingsScreen(
             apps = apps.filter { !it.selected },
             onConfirm = popup.onConfirm,
             onDismiss = vm::closePopup,
+        )
+        is SettingsPopup.Error -> ErrorPopup(
+            title = "Error",
+            message = popup.message,
+            onDismiss = vm::closePopup,
+        )
+        is SettingsPopup.Restart -> RestartPopup(
+            onDismiss = vm::terminateApp,
         )
     }
 }

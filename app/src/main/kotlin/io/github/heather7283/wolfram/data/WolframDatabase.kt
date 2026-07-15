@@ -1,6 +1,7 @@
 package io.github.heather7283.wolfram.data
 
 import android.content.Context
+import androidx.core.content.edit
 import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.DeleteColumn
@@ -8,6 +9,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.AutoMigrationSpec
 import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import io.github.heather7283.wolfram.data.config.XrayConfigDao
 import io.github.heather7283.wolfram.data.config.XrayConfigEntity
 import io.github.heather7283.wolfram.data.geofile.GeoFileEntity
@@ -17,6 +21,11 @@ import io.github.heather7283.wolfram.data.settings.SettingsEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okio.Path.Companion.toPath
+import timber.log.Timber
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 
 @Database(
     version = 2,
@@ -118,9 +127,115 @@ abstract class WolframDatabase : RoomDatabase() {
             }
         }
 
+        // thank you so much kind sir at https://blog.termian.dev/posts/room-on-upgrade/
+        class CorruptionCallback(
+            private val delegate: SupportSQLiteOpenHelper.Callback,
+        ) : SupportSQLiteOpenHelper.Callback(delegate.version) {
+
+            override fun onDowngrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                delegate.onDowngrade(db, oldVersion, newVersion)
+            }
+
+            override fun onCreate(db: SupportSQLiteDatabase) {
+                delegate.onCreate(db)
+            }
+
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                delegate.onOpen(db)
+            }
+
+            override fun onConfigure(db: SupportSQLiteDatabase) {
+                delegate.onConfigure(db)
+            }
+
+            override fun onCorruption(db: SupportSQLiteDatabase) {
+                throw Exception("Database is corrupted")
+            }
+
+            override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                delegate.onUpgrade(db, oldVersion, newVersion)
+            }
+        }
+        class CorruptionOpenHelperFactory(
+            private val delegate: SupportSQLiteOpenHelper.Factory,
+        ) : SupportSQLiteOpenHelper.Factory {
+
+            override fun create(configuration: SupportSQLiteOpenHelper.Configuration): SupportSQLiteOpenHelper {
+                val decoratedConfiguration =
+                    SupportSQLiteOpenHelper.Configuration.builder(configuration.context)
+                        .name(configuration.name)
+                        .callback(CorruptionCallback(configuration.callback))
+                        .build()
+                return delegate.create(decoratedConfiguration)
+            }
+        }
+
+        private val dbName = "wolfram"
         private var instance: WolframDatabase? = null
-        fun getInstance(ctx: Context) = instance ?: Room.databaseBuilder(
-            ctx, WolframDatabase::class.java, "wolfram"
-        ).addCallback(callback).build().also { instance = it }
+
+        private fun deleteDatabaseFiles(ctx: Context) {
+            // I hate everything about this API https://stackoverflow.com/a/61530578
+            Files.deleteIfExists(ctx.getDatabasePath(dbName).toPath())
+            Files.deleteIfExists(File(ctx.getDatabasePath(dbName).absolutePath + "-wal").toPath())
+            Files.deleteIfExists(File(ctx.getDatabasePath(dbName).absolutePath + "-shm").toPath())
+        }
+
+        fun getInstance(ctx: Context): WolframDatabase {
+            instance?.let { return it }
+
+            Timber.d("getInstance called for the first time")
+
+            val prefs = ctx.getSharedPreferences("restore", Context.MODE_PRIVATE)
+            val needsRestore = prefs.getBoolean("needs_restore", false)
+
+            Timber.d("getInstance: needs_restore=${needsRestore}")
+
+            if (!needsRestore) {
+                return Room.databaseBuilder(ctx, WolframDatabase::class.java, dbName)
+                    .addCallback(callback)
+                    .build()
+                    .also { instance = it }
+            }
+
+            // if we got here, needs_restore is 1
+            Timber.d("needs_restore=1, opening newdb")
+            prefs.edit {
+                putBoolean("needs_restore", false)
+                commit()
+            }
+
+            // TODO: clean up those files
+            val newdb = ctx.dataDir.toPath().resolve("newdb")
+            val olddb = ctx.dataDir.toPath().resolve("olddb")
+
+            try {
+                deleteDatabaseFiles(ctx)
+                val db = Room.databaseBuilder(ctx, WolframDatabase::class.java, dbName)
+                    .addCallback(callback)
+                    .openHelperFactory(CorruptionOpenHelperFactory(
+                        FrameworkSQLiteOpenHelperFactory()
+                    ))
+                    .createFromFile(newdb.toFile())
+                    .build()
+                    .also { instance = it }
+                db.openHelper.writableDatabase // touch
+                return db
+            } catch (e: Exception) {
+                Timber.e(e, "failed to load newdb, setting restore_failed=1")
+                prefs.edit {
+                    putBoolean("restore_failed", true)
+                    putString("restore_failed_reason", e.message ?: "Unknown error")
+                    commit()
+                }
+            }
+
+            // if we got here, restoring the db failed. Nuke the files and try again with olddb
+            deleteDatabaseFiles(ctx)
+            return Room.databaseBuilder(ctx, WolframDatabase::class.java, dbName)
+                .addCallback(callback)
+                .createFromFile(olddb.toFile())
+                .build()
+                .also { instance = it }
+        }
     }
 }

@@ -1,10 +1,14 @@
 package io.github.heather7283.wolfram.ui.settings
 
+import android.app.AlarmManager
 import android.app.Application
+import android.app.PendingIntent
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +27,11 @@ import javax.inject.Inject
 
 sealed class SettingsPopup {
     data object Inactive : SettingsPopup()
+    data class Error(
+        val title: String,
+        val message: String,
+    ) : SettingsPopup()
+    data object Restart : SettingsPopup()
     data class Cidr(
         val title: String,
         val ip: String?,
@@ -66,6 +75,20 @@ class SettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            // TODO: this popup should be shown before user switches to settings tab
+            val prefs = app.applicationContext.getSharedPreferences("restore", Context.MODE_PRIVATE)
+            val restoreFailed = prefs.getBoolean("restore_failed", false)
+            val restoreFailedReason = prefs.getString("restore_failed_reason", "")
+            prefs.edit {
+                remove("restore_failed")
+                remove("restore_failed_reason")
+                commit()
+            }
+
+            if (restoreFailed) {
+                openErrorPopup("Could not restore settings", restoreFailedReason)
+            }
+
             // TODO: this is slow as balls
             settings.collect { settings ->
                 _apps.value = app.packageManager.let { pm ->
@@ -113,8 +136,25 @@ class SettingsViewModel @Inject constructor(
             it.copy(popup = popup)
         }
     }
+    fun openErrorPopup(title: String, message: String?) {
+        _uiState.update {
+            it.copy(popup = SettingsPopup.Error(
+                title = title,
+                message = message ?: "Unknown error"
+            ))
+        }
+    }
+    fun openRestartPopup() {
+        _uiState.update {
+            it.copy(popup = SettingsPopup.Restart)
+        }
+    }
     fun closePopup() {
         _uiState.update { it.copy(popup = SettingsPopup.Inactive) }
+    }
+
+    fun terminateApp() {
+        Runtime.getRuntime().exit(0)
     }
 
     fun removeVpnAddress(address: CIDR) = viewModelScope.launch {
@@ -186,6 +226,15 @@ class SettingsViewModel @Inject constructor(
     fun onBackupLocationSelected(uri: Uri) = viewModelScope.launch {
         backupRepository.backupDatabaseToUri(uri).onLeft {
             Timber.e(it)
+            openErrorPopup("Could not backup settings", it.message)
+        }
+    }
+    fun onRestoreLocationSelected(uri: Uri) = viewModelScope.launch {
+        backupRepository.restoreDatabaseFromUri(uri).onLeft {
+            Timber.e(it)
+            openErrorPopup("Could not restore settings", it.message)
+        }.onRight {
+            openRestartPopup()
         }
     }
 }
