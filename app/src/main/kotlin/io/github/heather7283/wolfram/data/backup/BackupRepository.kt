@@ -46,16 +46,6 @@ class BackupRepository @Inject constructor(app: Application) {
     }
 
     suspend fun restoreDatabaseFromUri(uri: Uri) = Either.catch {
-        // the idea:
-        // 1. Back up the current db "curdb" to "olddb"
-        // 2. Copy user-provided file into a known location "newdb"
-        // 3. Set persistent flag needs_restore=1
-        // 4. Restart the app
-        // 5. Inside the db getInstance(), check needs_restore flags
-        //    5.1. If needs_restore==1, invoke loadFromFile("newdb") and set needs_restore=0
-        //         If it fails, additionally set restore_failed=1 and crash
-        //    5.2. If restore_failed==1, set restore_failed=0 and invoke loadFromFile("olddb")
-
         withContext(Dispatchers.IO) {
             val prefs = ctx.getSharedPreferences("restore", MODE_PRIVATE)
 
