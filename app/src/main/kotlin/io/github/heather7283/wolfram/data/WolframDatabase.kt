@@ -168,6 +168,19 @@ abstract class WolframDatabase : RoomDatabase() {
             }
         }
 
+        class OnOpenPrepackagedDatabaseCallback(
+            val file: Path,
+        ) : PrepackagedDatabaseCallback() {
+            override fun onOpenPrepackagedDatabase(db: SupportSQLiteDatabase) {
+                runCatching {
+                    Timber.d("Deleting database file ${file}")
+                    Files.delete(file)
+                }.onFailure {
+                    Timber.w(it, "Failed to cleanup database file ${file}")
+                }
+            }
+        }
+
         private val dbName = "wolfram"
         private var instance: WolframDatabase? = null
 
@@ -195,7 +208,6 @@ abstract class WolframDatabase : RoomDatabase() {
                 commit()
             }
 
-            // TODO: clean up those files
             val newdb = ctx.dataDir.toPath().resolve("newdb")
             val olddb = ctx.dataDir.toPath().resolve("olddb")
 
@@ -214,7 +226,7 @@ abstract class WolframDatabase : RoomDatabase() {
                     .openHelperFactory(OnCorruptionOpenHelperFactory(
                         FrameworkSQLiteOpenHelperFactory()
                     ))
-                    .createFromFile(newdb.toFile())
+                    .createFromFile(newdb.toFile(), OnOpenPrepackagedDatabaseCallback(newdb))
                     .build()
                     .also { instance = it }
                 db.openHelper.writableDatabase // touch
@@ -233,7 +245,7 @@ abstract class WolframDatabase : RoomDatabase() {
             deleteDatabaseFiles(ctx)
             return Room.databaseBuilder(ctx, WolframDatabase::class.java, dbName)
                 .addCallback(callback)
-                .createFromFile(olddb.toFile())
+                .createFromFile(olddb.toFile(), OnOpenPrepackagedDatabaseCallback(olddb))
                 .build()
                 .also { instance = it }
         }
