@@ -718,6 +718,7 @@ fun SettingsScreen(
                 HorizontalDivider()
 
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
                     Button(onClick = { createDocumentLauncher.launch("wolfram-settings.bak") }) {
