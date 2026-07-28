@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SettingsDao {
-    @Insert
-    suspend fun create(settings: SettingsEntity)
+    @Query("INSERT OR IGNORE INTO settings DEFAULT VALUES")
+    suspend fun seed()
 
     @Query("SELECT * FROM settings WHERE id = 1")
     fun observeAll(): Flow<SettingsEntity>

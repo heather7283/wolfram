@@ -17,21 +17,30 @@ data class SettingsEntity(
     //
     // I tried making a generic ListHolder and use delegation to make it more
     // ergonomic, but unfortunately this makes ksp just straight up crash lol
+    @ColumnInfo(defaultValue = """[ "10.20.30.1/24" ]""")
     val vpnAddressList: String,
+    @ColumnInfo(defaultValue = """[ "0.0.0.0/0" ]""")
     val vpnRouteList: String,
     @ColumnInfo(defaultValue = """[ "1.1.1.1", "8.8.8.8", "9.9.9.9" ]""")
     val dnsAddressList: String,
 
+    @ColumnInfo(defaultValue = """[]""")
     val selectedAppsList: String,
+    @ColumnInfo(defaultValue = "false")
     val selectedAppsIsWhitelist: Boolean,
 
+    @ColumnInfo(defaultValue = "true")
     val statsEnabled: Boolean,
+    @ColumnInfo(defaultValue = "127.0.0.1:54321")
     val statsEndpoint: String,
+    @ColumnInfo(defaultValue = "5")
     val statsPollInterval: Int,
 
+    @ColumnInfo(defaultValue = "0")
     val activeConfigId: Long,
 
     // Since this is a single row table the only ID it will have is 1
     @PrimaryKey
+    @ColumnInfo(defaultValue = "1")
     val id: Int = 1,
 )
