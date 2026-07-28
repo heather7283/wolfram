@@ -1,5 +1,6 @@
 package io.github.heather7283.wolfram.data.settings
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -18,6 +19,8 @@ data class SettingsEntity(
     // ergonomic, but unfortunately this makes ksp just straight up crash lol
     val vpnAddressList: String,
     val vpnRouteList: String,
+    @ColumnInfo(defaultValue = """[ "1.1.1.1", "8.8.8.8", "9.9.9.9" ]""")
+    val dnsAddressList: String,
 
     val selectedAppsList: String,
     val selectedAppsIsWhitelist: Boolean,

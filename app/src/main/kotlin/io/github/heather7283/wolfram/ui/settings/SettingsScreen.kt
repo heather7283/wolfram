@@ -55,6 +55,7 @@ import arrow.core.Either
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import io.github.heather7283.wolfram.utils.CIDR
+import java.net.InetAddress
 
 @Composable
 fun ToggleOption(
@@ -183,6 +184,24 @@ private fun CidrOption(
 }
 
 @Composable
+private fun IpOption(
+    ip: InetAddress,
+    onDelete: (ip: InetAddress) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier.fillMaxWidth().height(24.dp),
+    ) {
+        Text(ip.hostAddress)
+        IconButton(onClick = { onDelete(ip) }) {
+            Icon(Icons.Default.Delete, contentDescription = "Delete")
+        }
+    }
+}
+
+@Composable
 private fun MultiChoiceOption(
     title: String,
     subtitle: String? = null,
@@ -263,6 +282,50 @@ private fun CidrInputPopup(
             Button(
                 onClick = { cidr.onRight { onConfirm(it) } },
                 enabled = cidr.isRight(),
+            ) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+    )
+}
+
+@Composable
+private fun IpInputPopup(
+    title: String,
+    initialIp: String?,
+    onConfirm: (ip: InetAddress) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var ip by rememberSaveable { mutableStateOf(initialIp) }
+
+    val inetAddr = if (ip != null) {
+        Either.catch { InetAddress.getByName(ip!!) }
+    } else {
+        Either.Left("Empty IP or prefix")
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            OutlinedTextField(
+                value = ip ?: "",
+                onValueChange = { ip = it.trim() },
+                label = { Text("Address") },
+                singleLine = true,
+                isError = inetAddr.isLeft(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = { inetAddr.onRight { onConfirm(it) } },
+                enabled = inetAddr.isRight(),
             ) {
                 Text("Confirm")
             }
@@ -442,6 +505,30 @@ private fun VpnRoutesSection(
 }
 
 @Composable
+private fun DnsAddressesSection(
+    addresses: List<InetAddress>,
+    onAdd: () -> Unit,
+    onDelete: (InetAddress) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SettingsSection(
+        title = "DNS addresses",
+        button = {
+            IconButton(onClick = onAdd) {
+                Icon(Icons.Default.Add, contentDescription = "Add DNS address")
+            }
+        },
+        modifier = modifier,
+    ) {
+        Column {
+            addresses.forEach {
+                IpOption(ip = it, onDelete = onDelete)
+            }
+        }
+    }
+}
+
+@Composable
 private fun SelectedAppsSection(
     apps: List<AppInfo>,
     isWhitelist: Boolean,
@@ -597,6 +684,19 @@ fun SettingsScreen(
 
                 HorizontalDivider()
 
+                DnsAddressesSection(
+                    addresses = settings.dnsAddresses,
+                    onAdd = {
+                        vm.openIpPopup(
+                            title = "Add DNS address",
+                            onConfirm = { vm.addDnsAddress(it) }
+                        )
+                    },
+                    onDelete = { vm.removeDnsAddress(it) },
+                )
+
+                HorizontalDivider()
+
                 SelectedAppsSection(
                     apps = apps.filter { it.selected },
                     isWhitelist = settings.selectedAppsIsWhitelist,
@@ -632,6 +732,12 @@ fun SettingsScreen(
             title = popup.title,
             initialIp = popup.ip,
             initialPrefix = popup.prefix,
+            onConfirm = popup.onConfirm,
+            onDismiss = vm::closePopup,
+        )
+        is SettingsPopup.Ip -> IpInputPopup(
+            title = popup.title,
+            initialIp = popup.ip,
             onConfirm = popup.onConfirm,
             onDismiss = vm::closePopup,
         )

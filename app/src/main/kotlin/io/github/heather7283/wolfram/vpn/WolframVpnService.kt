@@ -244,6 +244,7 @@ class WolframVpnService : VpnService() {
             .setSession("Wolfram")
             .apply { settings.vpnAddresses.forEach { addAddress(it.ip, it.prefix) } }
             .apply { settings.vpnRoutes.forEach { addRoute(it.ip, it.prefix) } }
+            .apply { settings.dnsAddresses.forEach { addDnsServer(it) } }
             .apply {
                 if (settings.selectedAppsIsWhitelist) {
                     settings.selectedApps

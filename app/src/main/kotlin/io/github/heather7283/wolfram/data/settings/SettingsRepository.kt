@@ -1,7 +1,10 @@
 package io.github.heather7283.wolfram.data.settings
 
 import android.app.Application
+import android.net.InetAddresses
 import arrow.core.Either
+import arrow.core.catch
+import arrow.core.flatMap
 import io.github.heather7283.wolfram.data.WolframDatabase
 import io.github.heather7283.wolfram.utils.CIDR
 import jakarta.inject.Inject
@@ -11,6 +14,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import timber.log.Timber
+import java.net.InetAddress
+import java.net.InetSocketAddress
 
 @Singleton
 class SettingsRepository @Inject constructor(app: Application) {
@@ -20,6 +25,7 @@ class SettingsRepository @Inject constructor(app: Application) {
     private fun toSettings(e: SettingsEntity) = Settings(
         vpnAddresses = toCidrList(e.vpnAddressList),
         vpnRoutes = toCidrList(e.vpnRouteList),
+        dnsAddresses = toIpList(e.dnsAddressList),
         selectedApps = toStringList(e.selectedAppsList),
         selectedAppsIsWhitelist = e.selectedAppsIsWhitelist,
         activeConfigId = e.activeConfigId,
@@ -30,6 +36,15 @@ class SettingsRepository @Inject constructor(app: Application) {
 
     val settingsFlow = dao.observeAll().map(::toSettings)
     fun getSettings() = toSettings(dao.getAll())
+
+    private fun toIpList(value: String): List<InetAddress> = Either.catch {
+        Json.decodeFromString<List<String>>(value).mapNotNull {
+            InetAddress.getByName(it)
+        }
+    }.fold(
+        ifLeft = { Timber.e(it, "Could not parse ${value} as list of IPs"); emptyList() },
+        ifRight = { it },
+    )
 
     private fun toCidrList(value: String): List<CIDR> {
         // stored as [ "0.0.0.0/0", "192.168.0.1/24" ]
@@ -44,6 +59,10 @@ class SettingsRepository @Inject constructor(app: Application) {
                 }
             }
         )
+    }
+
+    private fun fromIpList(list: List<InetAddress>): String {
+        return Json.encodeToString(list.map { it.hostAddress })
     }
 
     private fun fromCidrList(list: List<CIDR>): String {
@@ -89,6 +108,21 @@ class SettingsRepository @Inject constructor(app: Application) {
             val old = toCidrList(dao.getVpnRouteList())
             val new = old.filterNot { it == cidr }
             dao.setVpnRouteList(fromCidrList(new))
+        }
+    }
+
+    suspend fun addDnsAddress(address: InetAddress) = Either.catch {
+        withContext(Dispatchers.IO) {
+            val old = toIpList(dao.getDnsAddressList())
+            val new = old + listOf(address)
+            dao.setDnsAddressList(fromIpList(new))
+        }
+    }
+    suspend fun removeDnsAddress(address: InetAddress) = Either.catch {
+        withContext(Dispatchers.IO) {
+            val old = toIpList(dao.getDnsAddressList())
+            val new = old.filterNot { it == address }
+            dao.setDnsAddressList(fromIpList(new))
         }
     }
 

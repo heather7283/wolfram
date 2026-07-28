@@ -28,7 +28,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 @Database(
-    version = 2,
+    version = 3,
     exportSchema = true,
     entities = [
         GeoFileEntity::class,
@@ -37,6 +37,7 @@ import java.nio.file.Path
    ],
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = WolframDatabase.AutoMigrationFrom1To2::class),
+        AutoMigration(from = 2, to = 3),
     ]
 )
 abstract class WolframDatabase : RoomDatabase() {
@@ -62,6 +63,7 @@ abstract class WolframDatabase : RoomDatabase() {
                         settings.create(SettingsEntity(
                             vpnAddressList = """[ "10.20.30.1/24" ]""",
                             vpnRouteList = """[ "0.0.0.0/0" ]""",
+                            dnsAddressList = """[ "1.1.1.1", "8.8.8.8", "9.9.9.9" ]""",
                             selectedAppsList = """[]""",
                             selectedAppsIsWhitelist = false,
                             activeConfigId = 0,

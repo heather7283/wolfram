@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.net.InetAddress
 import java.util.Collections.emptyList
 import javax.inject.Inject
 
@@ -37,6 +38,11 @@ sealed class SettingsPopup {
         val ip: String?,
         val prefix: Int?,
         val onConfirm: (cidr: CIDR) -> Unit
+    ) : SettingsPopup()
+    data class Ip(
+        val title: String,
+        val ip: String?,
+        val onConfirm: (ip: InetAddress) -> Unit
     ) : SettingsPopup()
     data class Apps(
         val title: String,
@@ -124,6 +130,20 @@ class SettingsViewModel @Inject constructor(
             it.copy(popup = popup)
         }
     }
+    fun openIpPopup(
+        title: String,
+        ip: String? = null,
+        onConfirm: (ip: InetAddress) -> Unit,
+    ) {
+        _uiState.update {
+            val popup = SettingsPopup.Ip(
+                title = title,
+                ip = ip,
+                onConfirm = onConfirm,
+            )
+            it.copy(popup = popup)
+        }
+    }
     fun openAppsPopup(
         title: String,
         onConfirm: (AppInfo) -> Unit,
@@ -177,6 +197,19 @@ class SettingsViewModel @Inject constructor(
     }
     fun addVpnRoute(address: CIDR) = viewModelScope.launch {
         settingsRepository.addVpnRoute(address).onLeft {
+            Timber.e(it)
+        }.onRight {
+            closePopup()
+        }
+    }
+
+    fun removeDnsAddress(address: InetAddress) = viewModelScope.launch {
+        settingsRepository.removeDnsAddress(address).onLeft {
+            Timber.e(it)
+        }
+    }
+    fun addDnsAddress(address: InetAddress) = viewModelScope.launch {
+        settingsRepository.addDnsAddress(address).onLeft {
             Timber.e(it)
         }.onRight {
             closePopup()
