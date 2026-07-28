@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -611,6 +613,8 @@ fun SettingsScreen(
         uri?.let { vm.onRestoreLocationSelected(uri) }
     }
 
+    val scrollState = rememberScrollState()
+
     Scaffold(
         modifier = modifier,
         bottomBar = navBar,
@@ -618,7 +622,8 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .padding(contentPadding)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             settings?.also { settings ->
