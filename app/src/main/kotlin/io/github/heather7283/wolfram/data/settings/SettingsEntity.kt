@@ -36,7 +36,7 @@ data class SettingsEntity(
     @ColumnInfo(defaultValue = "5")
     val statsPollInterval: Int,
 
-    @ColumnInfo(defaultValue = "0")
+    @ColumnInfo(defaultValue = "1")
     val activeConfigId: Long,
 
     // Since this is a single row table the only ID it will have is 1
