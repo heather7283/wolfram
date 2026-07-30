@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import arrow.core.getOrElse
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.heather7283.wolfram.WolframActivity
 import io.github.heather7283.wolfram.data.config.XrayConfigRepository
@@ -22,8 +23,15 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class WolframTileService : TileService() {
     @Inject lateinit var xrayRepository: XrayRepository
+    @Inject lateinit var settingsRepository: SettingsRepository
+    @Inject lateinit var configRepository: XrayConfigRepository
 
     private var job: Job? = null
+
+    private data class TileState(
+        val state: Int,
+        val subtitle: String,
+    )
 
     // Called when the user adds your tile.
     override fun onTileAdded() {
@@ -37,10 +45,19 @@ class WolframTileService : TileService() {
         super.onStartListening()
 
         job = CoroutineScope(Dispatchers.Main).launch {
-            xrayRepository.running.collect { isRunning ->
-                Timber.d("collect fired: isRunning=${isRunning}")
+            combine(xrayRepository.running, settingsRepository.settingsFlow) { running, settings ->
+                TileState(
+                    state = if (running) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE,
+                    subtitle = configRepository
+                        .getNameById(settings.activeConfigId)
+                        .getOrElse { "???" },
+                )
+            }.collect {
                 qsTile.apply {
-                    state = if (isRunning) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+                    state = it.state
+                    if (android.os.Build.VERSION.SDK_INT >= 29) {
+                        subtitle = it.subtitle
+                    }
                     updateTile()
                 }
             }

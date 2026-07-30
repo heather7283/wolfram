@@ -39,4 +39,12 @@ class XrayConfigRepository @Inject constructor(app: Application) {
             dao.getById(id)
         }
     }
+
+    suspend fun getNameById(id: Long) = Either.catch {
+        withContext(Dispatchers.IO) {
+            dao.getNameById(id) ?: throw NoSuchElementException(
+                "Config with id ${id} does not exist"
+            )
+        }
+    }
 }

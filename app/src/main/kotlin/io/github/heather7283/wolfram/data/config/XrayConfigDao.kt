@@ -15,6 +15,9 @@ interface XrayConfigDao {
     @Query("SELECT * FROM configs WHERE rowid = :id")
     suspend fun getById(id: Long): XrayConfigEntity
 
+    @Query("SELECT name FROM configs WHERE rowid = :id")
+    suspend fun getNameById(id: Long): String?
+
     @Query("SELECT text FROM configs WHERE rowid = :id")
     suspend fun getText(id: Long): String
 
