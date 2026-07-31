@@ -7,7 +7,7 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.github.heather7283.wolfram.vpn.WolframVpnService
+import io.github.heather7283.wolfram.service.WolframVpnService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

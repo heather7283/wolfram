@@ -34,7 +34,7 @@
         </activity>
 
         <service
-            android:name=".vpn.WolframVpnService"
+            android:name=".service.WolframVpnService"
             android:exported="false"
             android:foregroundServiceType="specialUse"
             android:permission="android.permission.BIND_VPN_SERVICE"
@@ -45,7 +45,7 @@
         </service>
 
         <service
-            android:name=".tile.WolframTileService"
+            android:name=".service.WolframTileService"
             android:exported="true"
             android:label="Wolfram"
             android:icon="@drawable/ic_launcher_foreground"

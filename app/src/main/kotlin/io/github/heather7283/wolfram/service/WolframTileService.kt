@@ -1,20 +1,19 @@
-package io.github.heather7283.wolfram.tile
+package io.github.heather7283.wolfram.service
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import arrow.core.getOrElse
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.heather7283.wolfram.WolframActivity
 import io.github.heather7283.wolfram.data.config.XrayConfigRepository
-import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
 import io.github.heather7283.wolfram.data.xray.XrayRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -55,7 +54,7 @@ class WolframTileService : TileService() {
             }.collect {
                 qsTile.apply {
                     state = it.state
-                    if (android.os.Build.VERSION.SDK_INT >= 29) {
+                    if (Build.VERSION.SDK_INT >= 29) {
                         subtitle = it.subtitle
                     }
                     updateTile()
@@ -83,7 +82,7 @@ class WolframTileService : TileService() {
             if (isSecure) f() else unlockAndRun(f)
         }
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             unlockAndThen { startActivityAndCollapse(pendingIntent) }
         } else {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
