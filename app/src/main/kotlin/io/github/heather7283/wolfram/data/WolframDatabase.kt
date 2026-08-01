@@ -14,14 +14,13 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import io.github.heather7283.wolfram.data.config.XrayConfigDao
 import io.github.heather7283.wolfram.data.config.XrayConfigEntity
-import io.github.heather7283.wolfram.data.geofile.GeoFileEntity
 import io.github.heather7283.wolfram.data.geofile.GeoFileDao
+import io.github.heather7283.wolfram.data.geofile.GeoFileEntity
 import io.github.heather7283.wolfram.data.settings.SettingsDao
 import io.github.heather7283.wolfram.data.settings.SettingsEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import okio.Path.Companion.toPath
 import timber.log.Timber
 import java.io.File
 import java.nio.file.Files

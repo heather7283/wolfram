@@ -1,10 +1,7 @@
 package io.github.heather7283.wolfram.data.settings
 
 import android.app.Application
-import android.net.InetAddresses
 import arrow.core.Either
-import arrow.core.catch
-import arrow.core.flatMap
 import io.github.heather7283.wolfram.data.WolframDatabase
 import io.github.heather7283.wolfram.utils.CIDR
 import jakarta.inject.Inject
@@ -15,7 +12,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.net.InetAddress
-import java.net.InetSocketAddress
 
 @Singleton
 class SettingsRepository @Inject constructor(app: Application) {

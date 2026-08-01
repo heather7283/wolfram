@@ -1,8 +1,6 @@
 package io.github.heather7283.wolfram.ui.settings
 
-import android.app.AlarmManager
 import android.app.Application
-import android.app.PendingIntent
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager

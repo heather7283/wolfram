@@ -53,15 +53,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.heather7283.wolfram.data.geofile.GeoFile
-import io.github.heather7283.wolfram.data.geofile.GeoFileEntity
 import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import java.text.DecimalFormat
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun AssetsScreen(

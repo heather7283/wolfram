@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.heather7283.wolfram.data.geofile.GeoFile
-import io.github.heather7283.wolfram.data.geofile.GeoFileEntity
 import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

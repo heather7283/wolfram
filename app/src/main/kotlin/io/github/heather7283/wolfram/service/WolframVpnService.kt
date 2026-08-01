@@ -3,7 +3,6 @@ package io.github.heather7283.wolfram.service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
 import android.content.Intent
 import android.net.LocalServerSocket
 import android.net.VpnService
