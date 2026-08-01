@@ -3,9 +3,9 @@ package io.github.heather7283.wolfram.ui.dashboard
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
+import io.github.heather7283.wolfram.data.xray.XrayInOutStat
 import io.github.heather7283.wolfram.data.xray.XrayRepository
 import io.github.heather7283.wolfram.data.xray.XrayStatsOption
-import io.github.heather7283.wolfram.utils.not
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 
@@ -32,17 +32,14 @@ class DashboardViewModel @Inject constructor(
             is XrayStatsOption.Idle -> SortedXrayStats.Idle
             is XrayStatsOption.Error -> SortedXrayStats.Error(stats.err)
             is XrayStatsOption.Success -> stats.stats.let {
-                // TODO: is it possible to remove duplicate code?
-                val inbounds = it.inbound
+                fun filter(stat: XrayInOutStat) = stat
                     .map { (k, v) -> Triple(k, v.downlink, v.uplink) }
-                    .filterNot { (_, downlink, uplink) -> !downlink && !uplink }
+                    .filterNot { (_, downlink, uplink) -> downlink == 0L && uplink == 0L }
                     .sortedWith(compareBy({ it.second }, { it.third }, { it.first }))
                     .asReversed()
-                val outbounds = it.outbound
-                    .map { (k, v) -> Triple(k, v.downlink, v.uplink) }
-                    .filterNot { (_, downlink, uplink) -> !downlink && !uplink }
-                    .sortedWith(compareBy({ it.second }, { it.third }, { it.first }))
-                    .asReversed()
+
+                val inbounds = filter(it.inbound)
+                val outbounds = filter(it.outbound)
                 SortedXrayStats.Stats(Pair(inbounds, outbounds))
             }
         }

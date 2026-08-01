@@ -2,9 +2,6 @@ package io.github.heather7283.wolfram.utils
 
 import java.text.DecimalFormat
 
-// To allow comparing numbers to 0 with ! (get fucked type system purists)
-operator fun Number.not() = this.toDouble() == 0.0
-
 // Can't believe this is not in stdlib
 fun formatBytes(bytes: Long): String {
     if (bytes < 1024) return "$bytes B"
