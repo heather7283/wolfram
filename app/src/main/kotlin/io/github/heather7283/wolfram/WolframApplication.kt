@@ -26,7 +26,13 @@ class WolframApplication : Application() {
     class VpnServiceLifecycleObserver @Inject constructor(
         private val repo: XrayRepository
     ) : DefaultLifecycleObserver {
-        override fun onStart(owner: LifecycleOwner) = repo.bind()
-        override fun onStop(owner: LifecycleOwner)  = repo.unbind()
+        override fun onStart(owner: LifecycleOwner) {
+            Timber.d("VpnServiceLifecycleObserver onStart")
+            repo.bind()
+        }
+        override fun onStop(owner: LifecycleOwner) {
+            Timber.d("VpnServiceLifecycleObserver onStop")
+            repo.unbind()
+        }
     }
 }

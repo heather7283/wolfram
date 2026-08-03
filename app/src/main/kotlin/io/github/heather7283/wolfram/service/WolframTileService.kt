@@ -45,6 +45,7 @@ class WolframTileService : TileService() {
 
         job = CoroutineScope(Dispatchers.Main).launch {
             combine(xrayRepository.running, settingsRepository.settingsFlow) { running, settings ->
+                Timber.d("combine: running=${running}")
                 TileState(
                     state = if (running) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE,
                     subtitle = configRepository
@@ -75,19 +76,7 @@ class WolframTileService : TileService() {
     override fun onClick() {
         Timber.d("onClick")
 
-        val intent = Intent(this, WolframActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-
-        val unlockAndThen = fun(f: () -> Unit) {
-            if (isSecure) f() else unlockAndRun(f)
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            unlockAndThen { startActivityAndCollapse(pendingIntent) }
-        } else {
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            unlockAndThen { startActivityAndCollapse(intent) }
-        }
+        xrayRepository.toggleVpn()
     }
 
     // Called when the user removes your tile.

@@ -85,8 +85,8 @@ class XrayRepository @Inject constructor(
         ctx.unbindService(connection)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun startVpn() {
+        @OptIn(ExperimentalCoroutinesApi::class)
         _logs.resetReplayCache()
         ContextCompat.startForegroundService(ctx, getIntent(mapOf("action" to "start")))
     }
@@ -94,5 +94,10 @@ class XrayRepository @Inject constructor(
     fun stopVpn() {
         Timber.d("stopVpn called")
         ctx.startService(getIntent(mapOf("action" to "stop")))
+    }
+
+    fun toggleVpn() {
+        Timber.d("toggleVpn called")
+        if (_running.value) stopVpn() else startVpn()
     }
 }
