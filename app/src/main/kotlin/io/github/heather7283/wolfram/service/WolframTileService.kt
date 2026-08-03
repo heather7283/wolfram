@@ -1,13 +1,10 @@
 package io.github.heather7283.wolfram.service
 
-import android.app.PendingIntent
-import android.content.Intent
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import arrow.core.getOrElse
 import dagger.hilt.android.AndroidEntryPoint
-import io.github.heather7283.wolfram.WolframActivity
 import io.github.heather7283.wolfram.data.config.XrayConfigRepository
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
 import io.github.heather7283.wolfram.data.xray.XrayRepository
