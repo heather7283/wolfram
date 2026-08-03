@@ -10,7 +10,15 @@ config editing, logs display and geofiles download, among other things.
 > The author does not condone or promote any unlawful activities.
 > Make sure you comply with the local law when using this project.
 
-## TODOs:
+## Building
+Wolfram bundles native xray executables. Before building, make sure to place the
+executable renamed to `libxray.so` into `app/src/main/jniLibs/$ARCH`, where ARCH
+is your device's architecture. Ability to download core at runtime is planned.
+
+If in trouble, refer to the [github action file](.github/workflows/build.yaml).
+Prebuilt APKs are also available as CI artifacts.
+
+## TODOs
 - [ ] Make it look good
 - [x] Add quick settings tile
 - [ ] Add ability to download core binaries
@@ -29,7 +37,7 @@ as downloading geofiles, to bypass the tunnel. This can be an issue if access to
 services hosting the desired files is restricted.
 I don't know how to deal with this yet.
 
-## References:
+## References
 - https://xtls.github.io/config/inbounds/tun.html
 - https://developer.android.com/reference/android/net/VpnService
 
