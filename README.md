@@ -1,21 +1,18 @@
 # (WIP) Wolfram
 Proxy client for android based on [Xray-core], inspired by [SimpleXray].
 
+This is a simple app that does all the necessary work to wire up Xray-core's TUN
+inbound to Android's VpnService and provides some nice to have QoL features like
+config editing, logs display and geofiles download, among other things.
+
 > [!WARNING]
 > This project was created exclusively for research purposes.
 > The author does not condone or promote any unlawful activities.
 > Make sure you comply with the local law when using this project.
 
-## Why?
-I wanted a dumb wrapper around Xray-core for android that won't get in my way.
-
-Unlike the aforementioned project that relies on a tun2socks library,
-Wolfram uses Xray-core's TUN inbound feature to directly interact with
-Android's VpnService API, which should be more efficient in theory.
-
 ## TODOs:
 - [ ] Make it look good
-- [ ] Add quick settings menu widget
+- [x] Add quick settings tile
 - [ ] Add ability to download core binaries
 - [X] Settings export/import
 - [X] Database migration
@@ -25,10 +22,16 @@ Android's VpnService API, which should be more efficient in theory.
 - [ ] Templated configs (maybe?)
 - [ ] Improve logs display (search, freeze, export, highlight?)
 
+## Limitations
+To prevent sending traffic into an andless loop of despair, Wolfram itself is
+excluded from the VPN tunnel. This causes traffic originating from Wolfram, such
+as downloading geofiles, to bypass the tunnel. This can be an issue if access to
+services hosting the desired files is restricted.
+I don't know how to deal with this yet.
+
 ## References:
-- https://github.com/android/architecture-samples
-- https://github.com/android/compose-samples
-- https://github.com/android/snippets
+- https://xtls.github.io/config/inbounds/tun.html
+- https://developer.android.com/reference/android/net/VpnService
 
 [Xray-core]: https://github.com/XTLS/Xray-core
 [SimpleXray]: https://github.com/lhear/SimpleXray
