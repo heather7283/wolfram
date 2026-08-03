@@ -5,6 +5,9 @@ This is a simple app that does all the necessary work to wire up Xray-core's TUN
 inbound to Android's VpnService and provides some nice to have QoL features like
 config editing, logs display and geofiles download, among other things.
 
+> [!CAUTION]
+> The project is WORK IN PROGRESS, there is no versioning and APKs are unsigned.
+
 > [!WARNING]
 > This project was created exclusively for research purposes.
 > The author does not condone or promote any unlawful activities.
@@ -36,6 +39,17 @@ excluded from the VPN tunnel. This causes traffic originating from Wolfram, such
 as downloading geofiles, to bypass the tunnel. This can be an issue if access to
 services hosting the desired files is restricted.
 I don't know how to deal with this yet.
+
+## License
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
 ## References
 - https://xtls.github.io/config/inbounds/tun.html
