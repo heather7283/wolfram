@@ -27,8 +27,6 @@ import javax.inject.Singleton
 class XrayRepository @Inject constructor(
     @ApplicationContext private val ctx: Context
 ) {
-    private var service: WolframVpnService? = null
-
     private val _running = MutableStateFlow(false)
     val running = _running.asStateFlow()
 
@@ -38,51 +36,14 @@ class XrayRepository @Inject constructor(
     private val _stats = MutableStateFlow<XrayStatsOption>(XrayStatsOption.Idle)
     val stats = _stats.asStateFlow()
 
-    private var mirrorJobs: List<Job> = emptyList()
-    private val connectionScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private val connection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName, binder: IBinder) {
-            Timber.d("connection onServiceConnected")
-            service = (binder as WolframVpnService.WolframVpnServiceBinder).getService()
-
-            mirrorJobs.forEach { it.cancel() }
-            mirrorJobs = listOf(
-                connectionScope.launch {
-                    service?.running?.collect { v -> _running.update { v } }
-                },
-                connectionScope.launch {
-                    service?.logs?.collect { l -> _logs.emit(l) }
-                },
-                connectionScope.launch {
-                    service?.apply { stats.collect { _stats.emit(it) } }
-                }
-            )
-        }
-
-        override fun onServiceDisconnected(name: ComponentName) {
-            Timber.d("connection onServiceDisconnected")
-            mirrorJobs.forEach { it.cancel() }
-            mirrorJobs = emptyList()
-            service = null
-        }
-    }
+    suspend fun postLogLine(line: String) = _logs.emit(line)
+    suspend fun postStats(stats: XrayStatsOption) = _stats.emit(stats)
+    suspend fun postRunning(running: Boolean) = _running.emit(running)
 
     private fun getIntent(extra: Map<String, String> = emptyMap()): Intent {
          return Intent(ctx, WolframVpnService::class.java).apply {
              extra.forEach { (k, v) -> putExtra(k, v) }
         }
-    }
-
-    fun bind() {
-        Timber.d("bind() called")
-        getIntent().also {
-            ctx.bindService(it, connection, Context.BIND_AUTO_CREATE)
-        }
-    }
-
-    fun unbind() {
-        Timber.d("unbind() called")
-        ctx.unbindService(connection)
     }
 
     fun startVpn() {

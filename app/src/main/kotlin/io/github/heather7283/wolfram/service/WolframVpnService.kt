@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.content.Intent
 import android.net.LocalServerSocket
 import android.net.VpnService
-import android.os.Binder
 import android.os.ParcelFileDescriptor
 import androidx.core.app.NotificationCompat
 import arrow.core.Either
@@ -17,6 +16,7 @@ import io.github.heather7283.wolfram.data.config.XrayConfigRepository
 import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
 import io.github.heather7283.wolfram.data.settings.Settings
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
+import io.github.heather7283.wolfram.data.xray.XrayRepository
 import io.github.heather7283.wolfram.data.xray.XrayStats
 import io.github.heather7283.wolfram.data.xray.XrayStatsOption
 import io.github.heather7283.wolfram.data.xray.parseXrayStats
@@ -24,13 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -46,32 +40,12 @@ class WolframVpnService : VpnService() {
     @Inject lateinit var settingsRepository: SettingsRepository
     @Inject lateinit var geoFileRepository: GeoFileRepository
     @Inject lateinit var xrayConfigRepository: XrayConfigRepository
+    @Inject lateinit var xrayRepository: XrayRepository
 
-    private val binder = WolframVpnServiceBinder()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var process: Process? = null
 
-    private val _running = MutableStateFlow(false)
-    val running = _running.asStateFlow()
-
-    private val _logs = MutableSharedFlow<String>(
-        extraBufferCapacity = 100,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
-    val logs = _logs.asSharedFlow()
-
-    private val _stats = MutableStateFlow<XrayStatsOption>(XrayStatsOption.Idle)
-    val stats = _stats.asStateFlow()
-
-    private val NOTIF_ID = 67;
-
-    inner class WolframVpnServiceBinder : Binder() {
-        fun getService() = this@WolframVpnService
-    }
-
-    override fun onBind(intent: Intent) = binder
-    override fun onRebind(intent: Intent) = Unit
-    override fun onUnbind(intent: Intent) = true
+    private val notificationId = 67
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Timber.d("onStartCommand action ${intent?.getStringExtra("action")}")
@@ -97,7 +71,7 @@ class WolframVpnService : VpnService() {
         // TODO: should this be a coroutine? I can't access the db otherwise
         CoroutineScope(Dispatchers.Default).launch {
             Timber.d("startVpn called")
-            if (_running.value) {
+            if (process != null) {
                 Timber.w("startVpn called when VPN is already running")
                 return@launch
             }
@@ -116,13 +90,13 @@ class WolframVpnService : VpnService() {
             }
 
             launchCore(tunFd, config.text, settings)
-            startForeground(NOTIF_ID, buildNotification())
+            startForeground(notificationId, buildNotification())
         }
     }
 
     fun stopVpn() {
         Timber.d("stopVpn called")
-        if (!_running.value) {
+        if (process == null) {
             Timber.w("stopVpn called when VPN is not running")
             return
         }
@@ -133,7 +107,11 @@ class WolframVpnService : VpnService() {
         stopSelf()
     }
 
-    private fun launchCore(tunFd: ParcelFileDescriptor, configText: String, settings: Settings) {
+    private suspend fun launchCore(
+        tunFd: ParcelFileDescriptor,
+        configText: String,
+        settings: Settings
+    ) {
         val sockName = "io.github.heather7283.wolfram.sock"
         val sock = LocalServerSocket(sockName)
 
@@ -147,7 +125,7 @@ class WolframVpnService : VpnService() {
                 .apply { environment()["XRAY_LOCATION_ASSET"] = assetsDir.pathString }
                 .redirectErrorStream(true)
                 .start()
-            _running.update { true }
+            xrayRepository.postRunning(true)
         } catch (e: Exception) {
             Timber.e(e, "failed to start child process")
             sock.close()
@@ -184,10 +162,10 @@ class WolframVpnService : VpnService() {
 
         scope.launch {
             if (!settings.statsEnabled) {
-                _stats.update { XrayStatsOption.Idle }
+                xrayRepository.postStats(XrayStatsOption.Idle)
                 return@launch
             }
-            _stats.update { XrayStatsOption.Success(XrayStats()) }
+            xrayRepository.postStats(XrayStatsOption.Success(XrayStats()))
 
             val http = OkHttpClient.Builder()
                 .callTimeout(1.seconds)
@@ -195,35 +173,36 @@ class WolframVpnService : VpnService() {
 
             while (true) {
                 delay(settings.statsPollInterval.seconds)
-                if (!_running.value) {
+                if (process == null) {
                     break
                 }
-                _stats.update {
-                    Either.catch {
-                        val req = Request.Builder()
-                            .url("http://${settings.statsEndpoint}/debug/vars")
-                            .build()
 
-                        http.newCall(req).execute().use { resp ->
-                            if (!resp.isSuccessful) {
-                                throw IOException("HTTP ${resp.code}")
-                            }
-                            resp.body.use { it.string() }
+                Either.catch {
+                    val req = Request.Builder()
+                        .url("http://${settings.statsEndpoint}/debug/vars")
+                        .build()
+
+                    http.newCall(req).execute().use { resp ->
+                        if (!resp.isSuccessful) {
+                            throw IOException("HTTP ${resp.code}")
                         }
-                    }.flatMap { body ->
-                        // TODO: use grpc instead, should be more efficient? not like it matters
-                        parseXrayStats(body)
-                    }.fold(
-                        ifLeft = { XrayStatsOption.Error(it) },
-                        ifRight = { XrayStatsOption.Success(it) }
-                    )
+                        resp.body.use { it.string() }
+                    }
+                }.flatMap { body ->
+                    // TODO: use grpc instead, should be more efficient? not like it matters
+                    parseXrayStats(body)
+                }.fold(
+                    ifLeft = { XrayStatsOption.Error(it) },
+                    ifRight = { XrayStatsOption.Success(it) }
+                ).also {
+                    xrayRepository.postStats(it)
                 }
             }
         }
         scope.launch {
             try {
-                process?.inputStream?.bufferedReader()?.lineSequence()?.forEach {
-                    line -> _logs.emit(line)
+                process?.inputStream?.bufferedReader()?.lineSequence()?.forEach { line ->
+                    xrayRepository.postLogLine(line)
                 }
             } catch (_: InterruptedIOException) {
                 // this is fine
@@ -231,9 +210,9 @@ class WolframVpnService : VpnService() {
         }
         scope.launch {
             val rc = process?.waitFor() ?: -1
-            _running.update { false }
-            _stats.update { XrayStatsOption.Idle }
-            _logs.emit("[process exited with code $rc]")
+            xrayRepository.postRunning(false)
+            xrayRepository.postStats(XrayStatsOption.Idle)
+            xrayRepository.postLogLine("[process exited with code $rc]")
         }
     }
 

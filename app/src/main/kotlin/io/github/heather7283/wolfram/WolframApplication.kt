@@ -12,27 +12,11 @@ import timber.log.Timber.DebugTree
 
 @HiltAndroidApp
 class WolframApplication : Application() {
-    @Inject lateinit var observer: VpnServiceLifecycleObserver
-
     override fun onCreate() {
         super.onCreate()
-        ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
         if (BuildConfig.DEBUG) {
             Timber.plant(DebugTree())
             Timber.i("Debug logging attached")
-        }
-    }
-
-    class VpnServiceLifecycleObserver @Inject constructor(
-        private val repo: XrayRepository
-    ) : DefaultLifecycleObserver {
-        override fun onStart(owner: LifecycleOwner) {
-            Timber.d("VpnServiceLifecycleObserver onStart")
-            repo.bind()
-        }
-        override fun onStop(owner: LifecycleOwner) {
-            Timber.d("VpnServiceLifecycleObserver onStop")
-            repo.unbind()
         }
     }
 }
