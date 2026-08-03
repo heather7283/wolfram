@@ -13,7 +13,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.heather7283.wolfram.data.backup.BackupRepository
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
 import io.github.heather7283.wolfram.utils.CIDR
-import io.github.heather7283.wolfram.utils.not
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -98,7 +97,8 @@ class SettingsViewModel @Inject constructor(
                 _apps.value = app.packageManager.let { pm ->
                     val flags = PackageManager.GET_META_DATA or PackageManager.GET_PERMISSIONS
                     pm.getInstalledApplications(flags).filter {
-                        !(it.flags and ApplicationInfo.FLAG_SYSTEM) // TODO: make this configurable?
+                        // TODO: make this configurable?
+                        (it.flags and ApplicationInfo.FLAG_SYSTEM) == 0
                     }.map { app ->
                         AppInfo(
                             name = app.loadLabel(pm).toString(),
