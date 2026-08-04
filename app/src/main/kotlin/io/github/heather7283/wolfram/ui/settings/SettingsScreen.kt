@@ -256,7 +256,7 @@ private fun CidrInputPopup(
         },
         confirmButton = {
             Button(
-                onClick = { cidr.onRight { onConfirm(it) } },
+                onClick = { cidr.onRight(onConfirm) },
                 enabled = cidr.isRight(),
             ) {
                 Text("Confirm")
@@ -300,7 +300,7 @@ private fun IpInputPopup(
         },
         confirmButton = {
             Button(
-                onClick = { inetAddr.onRight { onConfirm(it) } },
+                onClick = { inetAddr.onRight(onConfirm) },
                 enabled = inetAddr.isRight(),
             ) {
                 Text("Confirm")
@@ -573,7 +573,10 @@ private fun SelectedAppsSection(
                             contentDescription = "Application icon",
                             modifier = Modifier.size(36.dp),
                         )
-                        Column(horizontalAlignment = Alignment.Start, modifier = Modifier.weight(1f)) {
+                        Column(
+                            horizontalAlignment = Alignment.Start,
+                            modifier = Modifier.weight(1f)
+                        ) {
                             Text(
                                 text = app.name,
                                 maxLines = 1,
@@ -638,7 +641,7 @@ fun SettingsScreen(
                             title = "Enable stats",
                             subtitle = "Collect traffic statistics stats from xray",
                             checked = settings.statsEnabled,
-                            onCheckedChange = { vm.setStatsEnabled(it) },
+                            onCheckedChange = vm::setStatsEnabled,
                         )
                         TextOption(
                             title = "Stats endpoint",
@@ -648,8 +651,8 @@ fun SettingsScreen(
                                 settings.statsEndpoint
                             },
                             modified = state.statsEndpointModified,
-                            onValueChange = { vm.onStatsEndpointValueChange(it) },
-                            onSave = { vm.onStatsEndpointSave() },
+                            onValueChange = vm::onStatsEndpointValueChange,
+                            onSave = vm::onStatsEndpointSave,
                         )
                         IntOption(
                             title = "Poll interval (seconds)",
@@ -672,24 +675,24 @@ fun SettingsScreen(
                     onAddAddress = {
                         vm.openCidrPopup(
                             title = "Add VPN address",
-                            onConfirm = { vm.addVpnAddress(it) }
+                            onConfirm = vm::addVpnAddress,
                         )
                     },
-                    onDeleteAddress = { vm.removeVpnAddress(it) },
+                    onDeleteAddress = vm::removeVpnAddress,
                     onAddRoute = {
                         vm.openCidrPopup(
                             title = "Add VPN route",
-                            onConfirm = { vm.addVpnRoute(it) }
+                            onConfirm = vm::addVpnRoute,
                         )
                     },
-                    onDeleteRoute = { vm.removeVpnRoute(it) },
+                    onDeleteRoute = vm::removeVpnRoute,
                     onAddDns = {
                         vm.openIpPopup(
                             title = "Add DNS address",
-                            onConfirm = { vm.addDnsAddress(it) }
+                            onConfirm = vm::addDnsAddress,
                         )
                     },
-                    onDeleteDns = { vm.removeDnsAddress(it) },
+                    onDeleteDns = vm::removeDnsAddress,
                 )
 
                 SelectedAppsSection(
@@ -699,10 +702,10 @@ fun SettingsScreen(
                     onAdd = {
                         vm.openAppsPopup(
                             title = "Select application",
-                            onConfirm = { vm.addSelectedApp(it) },
+                            onConfirm = vm::addSelectedApp,
                         )
                     },
-                    onDelete = { vm.removeSelectedApp(it) },
+                    onDelete = vm::removeSelectedApp,
                 )
 
                 SettingsSection(title = "Backup") {
@@ -710,10 +713,14 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                     ) {
-                        Button(onClick = { createDocumentLauncher.launch("wolfram-settings.bak") }) {
+                        Button(
+                            onClick = { createDocumentLauncher.launch("wolfram-settings.bak") }
+                        ) {
                             Text("Backup settings")
                         }
-                        Button(onClick = { openDocumentLauncher.launch(arrayOf("*/*")) }) {
+                        Button(
+                            onClick = { openDocumentLauncher.launch(arrayOf("*/*")) }
+                        ) {
                             Text("Restore settings")
                         }
                     }
