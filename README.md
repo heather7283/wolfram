@@ -51,6 +51,9 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
+## LLM usage disclosure
+LLMs were used to write pieces of UI code. Nobody likes writing UI code, sue me
+
 ## References
 - https://xtls.github.io/config/inbounds/tun.html
 - https://developer.android.com/reference/android/net/VpnService
