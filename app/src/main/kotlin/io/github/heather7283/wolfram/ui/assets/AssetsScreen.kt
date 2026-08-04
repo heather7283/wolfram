@@ -3,6 +3,7 @@ package io.github.heather7283.wolfram.ui.assets
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -87,14 +88,15 @@ fun AssetsScreen(
         modifier = modifier,
     ) { innerPadding ->
         Box(
-            modifier = Modifier.padding(innerPadding).padding(16.dp).fillMaxSize(),
+            modifier = Modifier.padding(innerPadding).fillMaxSize(),
         ) {
             if (geoFiles.isEmpty()) {
                 EmptyState(modifier = Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(16.dp),
                 ) {
                     items(geoFiles, key = { it.name }) { geoFile ->
                         GeoFileCard(

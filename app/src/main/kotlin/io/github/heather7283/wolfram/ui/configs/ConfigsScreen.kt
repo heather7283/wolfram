@@ -106,7 +106,8 @@ fun ConfigsScreen(
     ) { contentPadding ->
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(contentPadding).padding(16.dp).fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            modifier = Modifier.padding(contentPadding).fillMaxSize(),
         ) {
             if (configs.value.isEmpty()) {
                 item {

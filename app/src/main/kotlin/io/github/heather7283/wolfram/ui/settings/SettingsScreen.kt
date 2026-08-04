@@ -630,7 +630,7 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .padding(contentPadding)
-                .padding(16.dp)
+                .padding(start = 16.dp, top = 16.dp, end = 16.dp)
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -726,6 +726,7 @@ fun SettingsScreen(
                     }
                 }
             }
+            Spacer(Modifier.height(16.dp))
         }
     }
 
