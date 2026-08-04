@@ -3,12 +3,15 @@ package io.github.heather7283.wolfram.ui.settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -16,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,10 +36,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,11 +46,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import arrow.core.Either
@@ -70,14 +68,26 @@ fun ToggleOption(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .toggleable(value = checked, onValueChange = onCheckedChange),
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                onValueChange = onCheckedChange,
+            )
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyLarge)
-            subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+            subtitle?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
+        Spacer(Modifier.width(16.dp))
         Switch(checked = checked, onCheckedChange = null, enabled = enabled)
     }
 }
@@ -93,9 +103,9 @@ private fun IntOption(
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(title, style = MaterialTheme.typography.bodyLarge)
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(8.dp))
         Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             OutlinedTextField(
@@ -103,11 +113,10 @@ private fun IntOption(
                 onValueChange = { onValueChange(it.toIntOrNull() ?: 0) },
                 placeholder = { Text(placeholder) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().weight(1f),
+                modifier = Modifier.weight(1f),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
             if (modified) {
-                Spacer(Modifier.width(8.dp))
                 FilledIconButton(onClick = onSave) {
                     Icon(Icons.Default.Save, "Save")
                 }
@@ -127,9 +136,9 @@ private fun TextOption(
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(title, style = MaterialTheme.typography.bodyLarge)
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(8.dp))
         Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             OutlinedTextField(
@@ -137,10 +146,9 @@ private fun TextOption(
                 onValueChange = onValueChange,
                 placeholder = { Text(placeholder) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().weight(1f),
+                modifier = Modifier.weight(1f),
             )
             if (modified) {
-                Spacer(Modifier.width(8.dp))
                 FilledIconButton(onClick = onSave) {
                     Icon(Icons.Default.Save, "Save")
                 }
@@ -158,7 +166,7 @@ private fun StringOption(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = modifier.fillMaxWidth().height(24.dp),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Text(string)
         IconButton(onClick = { onDelete(string) }) {
@@ -176,7 +184,7 @@ private fun CidrOption(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = modifier.fillMaxWidth().height(24.dp),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Text("${cidr.ip.hostAddress}/${cidr.prefix}")
         IconButton(onClick = { onDelete(cidr) }) {
@@ -194,45 +202,11 @@ private fun IpOption(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = modifier.fillMaxWidth().height(24.dp),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Text(ip.hostAddress)
         IconButton(onClick = { onDelete(ip) }) {
             Icon(Icons.Default.Delete, contentDescription = "Delete")
-        }
-    }
-}
-
-@Composable
-private fun MultiChoiceOption(
-    title: String,
-    subtitle: String? = null,
-    options: List<String>,
-    selected: Int,
-    onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
-        }
-        SingleChoiceSegmentedButtonRow {
-            options.forEachIndexed { index, string ->
-                SegmentedButton(
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = options.size
-                    ),
-                    onClick = { onSelect(index) },
-                    selected = index == selected,
-                    label = { Text(string) },
-                    modifier = modifier,
-                )
-            }
         }
     }
 }
@@ -268,7 +242,7 @@ private fun CidrInputPopup(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
                     modifier = Modifier.weight(0.67f),
                 )
-                Text("/", fontSize = TextUnit(24f, TextUnitType.Sp))
+                Text("/", style = MaterialTheme.typography.headlineSmall)
                 OutlinedTextField(
                     value = prefix?.toString(10) ?: "",
                     onValueChange = { prefix = it.toIntOrNull(10) ?: prefix },
@@ -308,7 +282,7 @@ private fun IpInputPopup(
     val inetAddr = if (ip != null) {
         Either.catch { InetAddress.getByName(ip!!) }
     } else {
-        Either.Left("Empty IP or prefix")
+        Either.Left("Empty IP")
     }
 
     AlertDialog(
@@ -347,58 +321,55 @@ private fun AppSelectPopup(
     onConfirm: (AppInfo) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(modifier = Modifier.padding(4.dp, 24.dp, 4.dp, 96.dp)) {
-            Card {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(8.dp),
-                ) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    LazyColumn(
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp),
+            ) {
+                items(apps, key = { it.packageName }) { app ->
+                    Card(
+                        onClick = { onConfirm(app) },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        items(apps) { app ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                onClick = { onConfirm(app) },
-                            ) {
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(8.dp),
-                                ) {
-                                    // are we for real? https://stackoverflow.com/a/78640640
-                                    Image(
-                                        painter = rememberDrawablePainter(app.icon),
-                                        contentDescription = "Application icon",
-                                        modifier = Modifier.size(36.dp),
-                                    )
-                                    Column(horizontalAlignment = Alignment.Start) {
-                                        Text(
-                                            text = app.name,
-                                            maxLines = 1,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                        )
-                                        Text(
-                                            text = app.packageName,
-                                            maxLines = 1,
-                                            style = MaterialTheme.typography.labelMedium,
-                                        )
-                                    }
-                                }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(12.dp),
+                        ) {
+                            // are we for real? https://stackoverflow.com/a/78640640
+                            Image(
+                                painter = rememberDrawablePainter(app.icon),
+                                contentDescription = "Application icon",
+                                modifier = Modifier.size(36.dp),
+                            )
+                            Column(horizontalAlignment = Alignment.Start) {
+                                Text(
+                                    text = app.name,
+                                    maxLines = 1,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                                Text(
+                                    text = app.packageName,
+                                    maxLines = 1,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
                             }
                         }
                     }
                 }
             }
-        }
-    }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+    )
 }
 
 @Composable
@@ -436,95 +407,129 @@ fun SettingsSection(
     button: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = modifier.fillMaxWidth().height(24.dp),
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                if (button != null) {
+                    button()
+                }
+            }
+            content()
+        }
+    }
+}
+
+@Composable
+private fun GroupHeader(
+    title: String,
+    onAdd: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .padding(end = 8.dp)
+                .size(32.dp)
+                .clip(CircleShape)
+                .clickable(onClick = onAdd),
+        ) {
+            Icon(
+                Icons.Default.Add,
+                contentDescription = "Add $title",
+                modifier = Modifier.size(24.dp),
             )
-            if (button != null) {
-                button()
-            }
         }
-        content()
     }
 }
 
 @Composable
-private fun VpnAddressesSection(
+private fun EmptyListHint() {
+    Text(
+        text = "Empty, tap + to add",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(vertical = 12.dp),
+    )
+}
+
+@Composable
+private fun VpnSettingsSection(
     addresses: List<CIDR>,
-    onAdd: () -> Unit,
-    onDelete: (CIDR) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    SettingsSection(
-        title = "VPN addresses",
-        button = {
-            IconButton(onClick = onAdd) {
-                Icon(Icons.Default.Add, contentDescription = "Add VPN address")
-            }
-        },
-        modifier = modifier,
-    ) {
-        Column {
-            addresses.forEach {
-                CidrOption(cidr = it, onDelete = onDelete)
-            }
-        }
-    }
-}
-
-@Composable
-private fun VpnRoutesSection(
     routes: List<CIDR>,
-    onAdd: () -> Unit,
-    onDelete: (CIDR) -> Unit,
+    dnsAddresses: List<InetAddress>,
+    onAddAddress: () -> Unit,
+    onDeleteAddress: (CIDR) -> Unit,
+    onAddRoute: () -> Unit,
+    onDeleteRoute: (CIDR) -> Unit,
+    onAddDns: () -> Unit,
+    onDeleteDns: (InetAddress) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SettingsSection(
-        title = "VPN routes",
-        button = {
-            IconButton(onClick = onAdd) {
-                Icon(Icons.Default.Add, contentDescription = "Add VPN route")
-            }
-        },
-        modifier = modifier,
-    ) {
+    SettingsSection(title = "VPN settings", modifier = modifier) {
         Column {
-            routes.forEach {
-                CidrOption(cidr = it, onDelete = onDelete)
+            GroupHeader(title = "VPN addresses", onAdd = onAddAddress)
+            if (addresses.isEmpty()) {
+                EmptyListHint()
+            } else {
+                addresses.forEachIndexed { index, cidr ->
+                    if (index > 0) {
+                        HorizontalDivider()
+                    }
+                    CidrOption(cidr = cidr, onDelete = onDeleteAddress)
+                }
             }
-        }
-    }
-}
 
-@Composable
-private fun DnsAddressesSection(
-    addresses: List<InetAddress>,
-    onAdd: () -> Unit,
-    onDelete: (InetAddress) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    SettingsSection(
-        title = "DNS addresses",
-        button = {
-            IconButton(onClick = onAdd) {
-                Icon(Icons.Default.Add, contentDescription = "Add DNS address")
+            GroupHeader(
+                title = "VPN routes",
+                onAdd = onAddRoute,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            if (routes.isEmpty()) {
+                EmptyListHint()
+            } else {
+                routes.forEachIndexed { index, cidr ->
+                    if (index > 0) {
+                        HorizontalDivider()
+                    }
+                    CidrOption(cidr = cidr, onDelete = onDeleteRoute)
+                }
             }
-        },
-        modifier = modifier,
-    ) {
-        Column {
-            addresses.forEach {
-                IpOption(ip = it, onDelete = onDelete)
+
+            GroupHeader(
+                title = "DNS addresses",
+                onAdd = onAddDns,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            if (dnsAddresses.isEmpty()) {
+                EmptyListHint()
+            } else {
+                dnsAddresses.forEachIndexed { index, ip ->
+                    if (index > 0) {
+                        HorizontalDivider()
+                    }
+                    IpOption(ip = ip, onDelete = onDeleteDns)
+                }
             }
         }
     }
@@ -541,49 +546,49 @@ private fun SelectedAppsSection(
 ) {
     SettingsSection(
         title = "Application proxy",
-        button = {
-            IconButton(onClick = onAdd) {
-                Icon(Icons.Default.Add, contentDescription = "Add application")
-            }
-        },
         modifier = modifier,
     ) {
         Column {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                MultiChoiceOption(
-                    title = "Mode",
-                    options = listOf("Whitelist", "Blacklist"),
-                    selected = if (isWhitelist) { 0 } else { 1 },
-                    onSelect = { onToggleWhitelist(when (it) { 0 -> true; else -> false }) },
-                )
-            }
-            apps.forEach { app ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(8.dp),
-                ) {
-                    Image(
-                        painter = rememberDrawablePainter(app.icon),
-                        contentDescription = "Application icon",
-                        modifier = Modifier.size(36.dp),
-                    )
-                    Column(horizontalAlignment = Alignment.Start, modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = app.name,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        Text(
-                            text = app.packageName,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.labelMedium,
-                        )
+            ToggleOption(
+                title = "Whitelist mode",
+                subtitle = "If enabled, only selected apps use VPN; if disabled, selected apps bypass VPN",
+                checked = isWhitelist,
+                onCheckedChange = onToggleWhitelist,
+            )
+            GroupHeader(title = "Selected apps", onAdd = onAdd)
+            if (apps.isEmpty()) {
+                EmptyListHint()
+            } else {
+                apps.forEachIndexed { index, app ->
+                    if (index > 0) {
+                        HorizontalDivider()
                     }
-                    IconButton(onClick = { onDelete(app) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Remove application")
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Image(
+                            painter = rememberDrawablePainter(app.icon),
+                            contentDescription = "Application icon",
+                            modifier = Modifier.size(36.dp),
+                        )
+                        Column(horizontalAlignment = Alignment.Start, modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = app.name,
+                                maxLines = 1,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Text(
+                                text = app.packageName,
+                                maxLines = 1,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        IconButton(onClick = { onDelete(app) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Remove application")
+                        }
                     }
                 }
             }
@@ -622,16 +627,16 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .padding(contentPadding)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(16.dp)
                 .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             settings?.also { settings ->
                 SettingsSection(title = "Stats") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         ToggleOption(
                             title = "Enable stats",
-                            subtitle = "Enable collection of up/downlink stats from xray",
+                            subtitle = "Collect traffic statistics stats from xray",
                             checked = settings.statsEnabled,
                             onCheckedChange = { vm.setStatsEnabled(it) },
                         )
@@ -647,7 +652,7 @@ fun SettingsScreen(
                             onSave = { vm.onStatsEndpointSave() },
                         )
                         IntOption(
-                            title = "Poll interval",
+                            title = "Poll interval (seconds)",
                             value = if (state.statsPollIntervalModified) {
                                 state.statsPollIntervalValue
                             } else {
@@ -660,47 +665,32 @@ fun SettingsScreen(
                     }
                 }
 
-                HorizontalDivider()
-
-                // TODO: this is very very ass, make it better
-                VpnAddressesSection(
+                VpnSettingsSection(
                     addresses = settings.vpnAddresses,
-                    onAdd = {
+                    routes = settings.vpnRoutes,
+                    dnsAddresses = settings.dnsAddresses,
+                    onAddAddress = {
                         vm.openCidrPopup(
                             title = "Add VPN address",
                             onConfirm = { vm.addVpnAddress(it) }
                         )
                     },
-                    onDelete = { vm.removeVpnAddress(it) },
-                )
-
-                HorizontalDivider()
-
-                VpnRoutesSection(
-                    routes = settings.vpnRoutes,
-                    onAdd = {
+                    onDeleteAddress = { vm.removeVpnAddress(it) },
+                    onAddRoute = {
                         vm.openCidrPopup(
                             title = "Add VPN route",
                             onConfirm = { vm.addVpnRoute(it) }
                         )
                     },
-                    onDelete = { vm.removeVpnRoute(it) },
-                )
-
-                HorizontalDivider()
-
-                DnsAddressesSection(
-                    addresses = settings.dnsAddresses,
-                    onAdd = {
+                    onDeleteRoute = { vm.removeVpnRoute(it) },
+                    onAddDns = {
                         vm.openIpPopup(
                             title = "Add DNS address",
                             onConfirm = { vm.addDnsAddress(it) }
                         )
                     },
-                    onDelete = { vm.removeDnsAddress(it) },
+                    onDeleteDns = { vm.removeDnsAddress(it) },
                 )
-
-                HorizontalDivider()
 
                 SelectedAppsSection(
                     apps = apps.filter { it.selected },
@@ -715,17 +705,17 @@ fun SettingsScreen(
                     onDelete = { vm.removeSelectedApp(it) },
                 )
 
-                HorizontalDivider()
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                ) {
-                    Button(onClick = { createDocumentLauncher.launch("wolfram-settings.bak") }) {
-                        Text("Backup settings")
-                    }
-                    Button(onClick = { openDocumentLauncher.launch(arrayOf("*/*")) }) {
-                        Text("Restore settings")
+                SettingsSection(title = "Backup") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                    ) {
+                        Button(onClick = { createDocumentLauncher.launch("wolfram-settings.bak") }) {
+                            Text("Backup settings")
+                        }
+                        Button(onClick = { openDocumentLauncher.launch(arrayOf("*/*")) }) {
+                            Text("Restore settings")
+                        }
                     }
                 }
             }
