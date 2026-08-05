@@ -29,7 +29,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 @Database(
-    version = 6,
+    version = 7,
     exportSchema = true,
     entities = [
         GeoFileEntity::class,
@@ -43,6 +43,7 @@ import java.nio.file.Path
         AutoMigration(from = 3, to = 4),
         AutoMigration(from = 4, to = 5),
         AutoMigration(from = 5, to = 6),
+        AutoMigration(from = 6, to = 7),
     ]
 )
 abstract class WolframDatabase : RoomDatabase() {
