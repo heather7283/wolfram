@@ -1,5 +1,7 @@
 package io.github.heather7283.wolfram.ui.settings
 
+import android.R
+import android.service.controls.templates.TemperatureControlTemplate
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -25,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -47,12 +50,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import arrow.core.Either
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import io.github.heather7283.wolfram.data.template.Template
 import io.github.heather7283.wolfram.ui.WolframNavigationActions
 import io.github.heather7283.wolfram.utils.CIDR
 import java.net.InetAddress
@@ -302,6 +308,73 @@ private fun IpInputPopup(
             Button(
                 onClick = { inetAddr.onRight(onConfirm) },
                 enabled = inetAddr.isRight(),
+            ) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+    )
+}
+
+@Composable
+private fun TemplateInputPopup(
+    title: String,
+    id: Int?,
+    initialKey: String?,
+    initialReplacement: String?,
+    onConfirm: (id: Int?, key: String, replacement: String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var key by rememberSaveable { mutableStateOf(initialKey ?: "") }
+    var replacement by rememberSaveable { mutableStateOf(initialReplacement ?: "") }
+
+    val error = if (key.isBlank()) {
+        "Empty key"
+    } else if (replacement.isBlank()) {
+        "Empty replacement"
+    } else if (key.contains('@')) {
+        "Key must not contain '@'"
+    } else if (key.startsWith("WOLFRAM_")) {
+        "Keys starting with WOLFRAM_ are reserved"
+    } else {
+        null
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(horizontalAlignment = Alignment.Start) {
+                OutlinedTextField(
+                    value = key,
+                    onValueChange = { key = it.trim() },
+                    label = { Text("Key") },
+                    singleLine = true,
+                    isError = error != null,
+                )
+                OutlinedTextField(
+                    value = replacement,
+                    onValueChange = { replacement = it.trim() },
+                    label = { Text("Replacement") },
+                    singleLine = true,
+                    isError = error != null,
+                )
+                error?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(id, key, replacement) },
+                enabled = error == null,
             ) {
                 Text("Confirm")
             }
@@ -600,6 +673,82 @@ private fun SelectedAppsSection(
 }
 
 @Composable
+private fun TemplatesSection(
+    templates: List<Template>,
+    onAdd: () -> Unit,
+    onEdit: (id: Int, key: String, replacement: String) -> Unit,
+    onDelete: (id: Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SettingsSection(
+        title = "Config templates",
+        modifier = modifier,
+        button = {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onAdd),
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Add config template",
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+    ) {
+        Column {
+            if (templates.isEmpty()) {
+                EmptyListHint()
+            } else {
+                templates.forEachIndexed { index, template ->
+                    if (index > 0) {
+                        HorizontalDivider()
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.Start,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = template.key,
+                                maxLines = 1,
+                                style = MaterialTheme.typography.bodyMedium,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = template.replacement,
+                                maxLines = 1,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        IconButton(
+                            onClick = { onEdit(template.id, template.key, template.replacement) }
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit template")
+                        }
+                        IconButton(
+                            onClick = { onDelete(template.id) }
+                        ) {
+                            Icon(Icons.Default.Delete, contentDescription = "Remove template")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun SettingsScreen(
     navBar: @Composable () -> Unit,
     navActions: WolframNavigationActions,
@@ -609,6 +758,7 @@ fun SettingsScreen(
     val settings by vm.settings.collectAsStateWithLifecycle(null)
     val state by vm.uiState.collectAsStateWithLifecycle()
     val apps by vm.apps.collectAsStateWithLifecycle()
+    val templates by vm.templates.collectAsStateWithLifecycle(emptyList())
 
     val createDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/vnd.sqlite3"),
@@ -708,6 +858,26 @@ fun SettingsScreen(
                     onDelete = vm::removeSelectedApp,
                 )
 
+                TemplatesSection(
+                    templates = templates,
+                    onAdd = {
+                        vm.openTemplatePopup(
+                            title = "Add template",
+                            onConfirm = vm::templateUpsert,
+                        )
+                    },
+                    onEdit = { id, key, replacement ->
+                        vm.openTemplatePopup(
+                            title = "Edit template",
+                            id = id,
+                            key = key,
+                            replacement = replacement,
+                            onConfirm = vm::templateUpsert,
+                        )
+                    },
+                    onDelete = vm::templateDelete,
+                )
+
                 SettingsSection(title = "Backup") {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -748,6 +918,14 @@ fun SettingsScreen(
         is SettingsPopup.Apps -> AppSelectPopup(
             title = popup.title,
             apps = apps.filter { !it.selected },
+            onConfirm = popup.onConfirm,
+            onDismiss = vm::closePopup,
+        )
+        is SettingsPopup.Template -> TemplateInputPopup(
+            title = popup.title,
+            id = popup.id,
+            initialKey = popup.key,
+            initialReplacement = popup.replacement,
             onConfirm = popup.onConfirm,
             onDismiss = vm::closePopup,
         )

@@ -18,6 +18,8 @@ import io.github.heather7283.wolfram.data.geofile.GeoFileDao
 import io.github.heather7283.wolfram.data.geofile.GeoFileEntity
 import io.github.heather7283.wolfram.data.settings.SettingsDao
 import io.github.heather7283.wolfram.data.settings.SettingsEntity
+import io.github.heather7283.wolfram.data.template.Template
+import io.github.heather7283.wolfram.data.template.TemplateDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,24 +29,27 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 @Database(
-    version = 5,
+    version = 6,
     exportSchema = true,
     entities = [
         GeoFileEntity::class,
         SettingsEntity::class,
-        XrayConfigEntity::class
+        XrayConfigEntity::class,
+        Template::class,
    ],
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = WolframDatabase.AutoMigrationFrom1To2::class),
         AutoMigration(from = 2, to = 3),
         AutoMigration(from = 3, to = 4),
         AutoMigration(from = 4, to = 5),
+        AutoMigration(from = 5, to = 6),
     ]
 )
 abstract class WolframDatabase : RoomDatabase() {
     abstract fun geoFileDao(): GeoFileDao
     abstract fun settingsDao(): SettingsDao
     abstract fun xrayConfigDao(): XrayConfigDao
+    abstract fun templateDao(): TemplateDao
 
     @DeleteColumn.Entries(
         DeleteColumn(tableName = "geofiles", columnName = "existsLocally"),
@@ -72,6 +77,13 @@ abstract class WolframDatabase : RoomDatabase() {
                             name = "geosite.dat",
                             url = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat",
                         ))
+
+                        val templates = db.templateDao()
+                        templates.upsert(
+                            id = null,
+                            key = "LOG_LEVEL",
+                            replacement = "info",
+                        )
 
                         val configs = db.xrayConfigDao()
                         configs.insert("default", """

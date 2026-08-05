@@ -6,12 +6,15 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.service.controls.templates.ToggleRangeTemplate
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.heather7283.wolfram.data.backup.BackupRepository
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
+import io.github.heather7283.wolfram.data.template.Template
+import io.github.heather7283.wolfram.data.template.TemplateRepository
 import io.github.heather7283.wolfram.utils.CIDR
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,6 +48,13 @@ sealed class SettingsPopup {
         val title: String,
         val onConfirm: (AppInfo) -> Unit
     ) : SettingsPopup()
+    data class Template(
+        val title: String,
+        val id: Int?,
+        val key: String?,
+        val replacement: String?,
+        val onConfirm: (id: Int?, key: String, replacement: String) -> Unit,
+    ) : SettingsPopup()
 }
 
 data class SettingsUiState(
@@ -66,9 +76,11 @@ data class AppInfo(
 class SettingsViewModel @Inject constructor(
     private val app: Application,
     private val settingsRepository: SettingsRepository,
+    private val templateRepository: TemplateRepository,
     private val backupRepository: BackupRepository,
 ) : ViewModel() {
     val settings = settingsRepository.settingsFlow
+    val templates = templateRepository.templatesFlow
 
     private val _apps = MutableStateFlow<List<AppInfo>>(emptyList())
     val apps = _apps.asStateFlow()
@@ -149,6 +161,24 @@ class SettingsViewModel @Inject constructor(
         _uiState.update {
             val popup = SettingsPopup.Apps(
                 title = title,
+                onConfirm = onConfirm,
+            )
+            it.copy(popup = popup)
+        }
+    }
+    fun openTemplatePopup(
+        title: String,
+        id: Int? = null,
+        key: String? = null,
+        replacement: String? = null,
+        onConfirm: (id: Int?, key: String, replacement: String) -> Unit,
+    ) {
+        _uiState.update {
+            val popup = SettingsPopup.Template(
+                title = title,
+                id = id,
+                key = key,
+                replacement = replacement,
                 onConfirm = onConfirm,
             )
             it.copy(popup = popup)
@@ -251,6 +281,23 @@ class SettingsViewModel @Inject constructor(
             _uiState.update {
                 it.copy(statsPollIntervalModified = false)
             }
+        }
+    }
+
+    fun templateUpsert(id: Int?, key: String, replacement: String) = viewModelScope.launch {
+        templateRepository.upsert(id, key, replacement).onLeft {
+            Timber.e(it)
+            openErrorPopup("Could not add or edit template", it.message)
+        }.onRight {
+            closePopup()
+        }
+    }
+    fun templateDelete(id: Int) = viewModelScope.launch {
+        templateRepository.delete(id).onLeft {
+            Timber.e(it)
+            openErrorPopup("Could not delete template", it.message)
+        }.onRight {
+            closePopup()
         }
     }
 
