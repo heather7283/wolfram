@@ -23,14 +23,14 @@ Prebuilt APKs are also available as CI artifacts.
 
 ## TODOs
 - [ ] Make it look good
-- [x] Add quick settings tile
+- [X] Add quick settings tile
 - [ ] Add ability to download core binaries
 - [X] Settings export/import
 - [X] Database migration
 - [ ] Balancer stats support
 - [ ] Improve config editor (validation, syntax, indent, kb for json chars)
 - [ ] Modular configs (maybe?)
-- [ ] Templated configs (maybe?)
+- [X] Templated configs
 - [ ] Improve logs display (search, freeze, export, highlight?)
 
 ## Limitations
