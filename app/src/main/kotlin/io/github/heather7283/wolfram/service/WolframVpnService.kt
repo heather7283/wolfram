@@ -8,6 +8,7 @@ import android.net.LocalServerSocket
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.compose.LifecyclePauseOrDisposeEffectResult
 import arrow.core.Either
 import arrow.core.flatMap
 import dagger.hilt.android.AndroidEntryPoint
@@ -16,6 +17,7 @@ import io.github.heather7283.wolfram.data.config.XrayConfigRepository
 import io.github.heather7283.wolfram.data.geofile.GeoFileRepository
 import io.github.heather7283.wolfram.data.settings.Settings
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
+import io.github.heather7283.wolfram.data.template.TemplateRepository
 import io.github.heather7283.wolfram.data.xray.XrayRepository
 import io.github.heather7283.wolfram.data.xray.XrayStats
 import io.github.heather7283.wolfram.data.xray.XrayStatsOption
@@ -41,6 +43,7 @@ class WolframVpnService : VpnService() {
     @Inject lateinit var geoFileRepository: GeoFileRepository
     @Inject lateinit var xrayConfigRepository: XrayConfigRepository
     @Inject lateinit var xrayRepository: XrayRepository
+    @Inject lateinit var templateRepository: TemplateRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var process: Process? = null
@@ -78,10 +81,18 @@ class WolframVpnService : VpnService() {
 
             val settings = settingsRepository.getSettings()
             val configId = settings.activeConfigId
-            val config = xrayConfigRepository.getById(configId).onLeft {
+            var config = xrayConfigRepository.getById(configId).onLeft {
                 Timber.e(it, "xray config with id ${configId} not found")
                 return@launch
+            }.getOrNull()!!.text
+
+            val templates = templateRepository.getAll().onLeft {
+                Timber.e(it, "Could not retrieve config templates")
+                return@launch
             }.getOrNull()!!
+            for (template in templates) {
+                config = config.replace("@${template.key}@", template.replacement)
+            }
 
             val tunFd = buildTunInterface()
             if (tunFd == null) {
@@ -89,7 +100,7 @@ class WolframVpnService : VpnService() {
                 return@launch
             }
 
-            launchCore(tunFd, config.text, settings)
+            launchCore(tunFd, config, settings)
             startForeground(notificationId, buildNotification())
         }
     }

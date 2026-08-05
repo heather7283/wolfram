@@ -89,7 +89,7 @@ abstract class WolframDatabase : RoomDatabase() {
                         configs.insert("default", """
                             {
                               "log": {
-                                "loglevel": "error"
+                                "loglevel": "@LOG_LEVEL@"
                               },
                               "metrics": {
                                 "tag": "metrics",

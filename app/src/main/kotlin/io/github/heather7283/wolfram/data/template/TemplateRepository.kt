@@ -12,6 +12,10 @@ class TemplateRepository @Inject constructor(app: Application) {
 
     val templatesFlow = dao.observeAll()
 
+    suspend fun getAll() = Either.catch {
+        dao.getAll()
+    }
+
     suspend fun upsert(id: Int? = null, key: String, replacement: String) = Either.catch {
         require(!key.startsWith("WOLFRAM_")) {
             "Template keys starting with WOLFRAM_ are reserved"

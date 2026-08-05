@@ -13,6 +13,9 @@ interface TemplateDao {
     @Query("SELECT * FROM templates")
     fun observeAll(): Flow<List<Template>>
 
+    @Query("SELECT * FROM templates")
+    suspend fun getAll(): List<Template>
+
     @Query("INSERT OR REPLACE INTO templates ( id, key, replacement ) VALUES ( :id, :key, :replacement )")
     suspend fun upsert(id: Int?, key: String, replacement: String)
 
