@@ -93,7 +93,7 @@ abstract class WolframDatabase : RoomDatabase() {
                               },
                               "metrics": {
                                 "tag": "metrics",
-                                "listen": "127.0.0.1:54321"
+                                "listen": @WOLFRAM_STATS_ENDPOINT@
                               },
                               "stats": {},
                               "policy": {

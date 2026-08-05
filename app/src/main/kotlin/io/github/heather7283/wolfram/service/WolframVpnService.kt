@@ -86,6 +86,13 @@ class WolframVpnService : VpnService() {
                 return@launch
             }.getOrNull()!!.text
 
+            val specialTemplates = listOf(
+                "@WOLFRAM_STATS_ENDPOINT@" to "\"${settings.statsEndpoint}\"",
+            )
+            for (template in specialTemplates) {
+                config = config.replace(template.first, template.second)
+            }
+
             val templates = templateRepository.getAll().onLeft {
                 Timber.e(it, "Could not retrieve config templates")
                 return@launch
