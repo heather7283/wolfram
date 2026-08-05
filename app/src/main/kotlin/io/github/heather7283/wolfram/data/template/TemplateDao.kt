@@ -16,7 +16,10 @@ interface TemplateDao {
     @Query("SELECT * FROM templates")
     suspend fun getAll(): List<Template>
 
-    @Query("INSERT OR REPLACE INTO templates ( id, key, replacement ) VALUES ( :id, :key, :replacement )")
+    @Query("""
+        INSERT INTO templates ( id, key, replacement ) VALUES ( :id, :key, :replacement )
+        ON CONFLICT ( id ) DO UPDATE SET key=excluded.key, replacement=excluded.replacement
+    """)
     suspend fun upsert(id: Int?, key: String, replacement: String)
 
     @Query("DELETE FROM templates WHERE id = :id")
