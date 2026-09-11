@@ -1,0 +1,197 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 8,
+    "identityHash": "51b661b681ce6b4795ed0f331bb8e1fc",
+    "entities": [
+      {
+        "tableName": "geofiles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `url` TEXT NOT NULL, PRIMARY KEY(`name`))",
+        "fields": [
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "name"
+          ]
+        }
+      },
+      {
+        "tableName": "settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vpnAddressList` TEXT NOT NULL DEFAULT '[ \"10.20.30.1/24\" ]', `vpnRouteList` TEXT NOT NULL DEFAULT '[ \"0.0.0.0/0\" ]', `vpnIsMetered` INTEGER NOT NULL DEFAULT 0, `dnsAddressList` TEXT NOT NULL DEFAULT '[ \"1.1.1.1\", \"8.8.8.8\", \"9.9.9.9\" ]', `selectedAppsList` TEXT NOT NULL DEFAULT '[]', `selectedAppsIsWhitelist` INTEGER NOT NULL DEFAULT false, `statsEnabled` INTEGER NOT NULL DEFAULT true, `statsEndpoint` TEXT NOT NULL DEFAULT '127.0.0.1:54321', `statsPollInterval` INTEGER NOT NULL DEFAULT 5, `activeConfigId` INTEGER NOT NULL DEFAULT 1, `id` INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "vpnAddressList",
+            "columnName": "vpnAddressList",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'[ \"10.20.30.1/24\" ]'"
+          },
+          {
+            "fieldPath": "vpnRouteList",
+            "columnName": "vpnRouteList",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'[ \"0.0.0.0/0\" ]'"
+          },
+          {
+            "fieldPath": "vpnIsMetered",
+            "columnName": "vpnIsMetered",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "dnsAddressList",
+            "columnName": "dnsAddressList",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'[ \"1.1.1.1\", \"8.8.8.8\", \"9.9.9.9\" ]'"
+          },
+          {
+            "fieldPath": "selectedAppsList",
+            "columnName": "selectedAppsList",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'[]'"
+          },
+          {
+            "fieldPath": "selectedAppsIsWhitelist",
+            "columnName": "selectedAppsIsWhitelist",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "false"
+          },
+          {
+            "fieldPath": "statsEnabled",
+            "columnName": "statsEnabled",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "true"
+          },
+          {
+            "fieldPath": "statsEndpoint",
+            "columnName": "statsEndpoint",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'127.0.0.1:54321'"
+          },
+          {
+            "fieldPath": "statsPollInterval",
+            "columnName": "statsPollInterval",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "5"
+          },
+          {
+            "fieldPath": "activeConfigId",
+            "columnName": "activeConfigId",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "configs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`rowid` INTEGER NOT NULL, `name` TEXT NOT NULL, `text` TEXT NOT NULL, PRIMARY KEY(`rowid`))",
+        "fields": [
+          {
+            "fieldPath": "rowid",
+            "columnName": "rowid",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "rowid"
+          ]
+        }
+      },
+      {
+        "tableName": "templates",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `key` TEXT NOT NULL, `replacement` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "replacement",
+            "columnName": "replacement",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_templates_key",
+            "unique": true,
+            "columnNames": [
+              "key"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_templates_key` ON `${TABLE_NAME}` (`key`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '51b661b681ce6b4795ed0f331bb8e1fc')"
+    ]
+  }
+}

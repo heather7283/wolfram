@@ -21,6 +21,7 @@ class SettingsRepository @Inject constructor(app: Application) {
     private fun toSettings(e: SettingsEntity) = Settings(
         vpnAddresses = toCidrList(e.vpnAddressList),
         vpnRoutes = toCidrList(e.vpnRouteList),
+        vpnIsMetered = e.vpnIsMetered,
         dnsAddresses = toIpList(e.dnsAddressList),
         selectedApps = toStringList(e.selectedAppsList),
         selectedAppsIsWhitelist = e.selectedAppsIsWhitelist,
@@ -104,6 +105,12 @@ class SettingsRepository @Inject constructor(app: Application) {
             val old = toCidrList(dao.getVpnRouteList())
             val new = old.filterNot { it == cidr }
             dao.setVpnRouteList(fromCidrList(new))
+        }
+    }
+
+    suspend fun setVpnIsMetered(isMetered: Boolean) = Either.catch {
+        withContext(Dispatchers.IO) {
+            dao.setVpnIsMetered(isMetered)
         }
     }
 

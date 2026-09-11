@@ -25,6 +25,11 @@ interface SettingsDao {
     @Query("UPDATE settings SET vpnRouteList = :list WHERE id = 1")
     suspend fun setVpnRouteList(list: String)
 
+    @Query("SELECT vpnIsMetered FROM settings WHERE id = 1")
+    suspend fun getVpnIsMetered(): Boolean
+    @Query("UPDATE settings SET vpnIsMetered = :isMetered WHERE id = 1")
+    suspend fun setVpnIsMetered(isMetered: Boolean)
+
     @Query("SELECT dnsAddressList FROM settings WHERE id = 1")
     suspend fun getDnsAddressList(): String
     @Query("UPDATE settings SET dnsAddressList = :list WHERE id = 1")

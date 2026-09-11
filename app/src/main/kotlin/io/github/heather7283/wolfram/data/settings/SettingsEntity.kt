@@ -21,6 +21,8 @@ data class SettingsEntity(
     val vpnAddressList: String,
     @ColumnInfo(defaultValue = """[ "0.0.0.0/0" ]""")
     val vpnRouteList: String,
+    @ColumnInfo(defaultValue = "0")
+    val vpnIsMetered: Boolean,
     @ColumnInfo(defaultValue = """[ "1.1.1.1", "8.8.8.8", "9.9.9.9" ]""")
     val dnsAddressList: String,
 

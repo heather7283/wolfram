@@ -6,6 +6,7 @@ import java.net.InetAddress
 data class Settings(
     val vpnAddresses: List<CIDR>,
     val vpnRoutes: List<CIDR>,
+    val vpnIsMetered: Boolean,
     val dnsAddresses: List<InetAddress>,
 
     val selectedApps: List<String>,

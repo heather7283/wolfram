@@ -231,6 +231,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setVpnIsMetered(isMetered: Boolean) = viewModelScope.launch {
+        settingsRepository.setVpnIsMetered(isMetered).onLeft {
+            Timber.e(it)
+        }
+    }
+
     fun removeDnsAddress(address: InetAddress) = viewModelScope.launch {
         settingsRepository.removeDnsAddress(address).onLeft {
             Timber.e(it)

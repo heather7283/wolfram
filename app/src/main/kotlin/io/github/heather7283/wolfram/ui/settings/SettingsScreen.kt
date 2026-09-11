@@ -550,17 +550,26 @@ private fun EmptyListHint() {
 private fun VpnSettingsSection(
     addresses: List<CIDR>,
     routes: List<CIDR>,
+    isMetered: Boolean,
     dnsAddresses: List<InetAddress>,
     onAddAddress: () -> Unit,
     onDeleteAddress: (CIDR) -> Unit,
     onAddRoute: () -> Unit,
     onDeleteRoute: (CIDR) -> Unit,
+    onSetMetered: (Boolean) -> Unit,
     onAddDns: () -> Unit,
     onDeleteDns: (InetAddress) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SettingsSection(title = "VPN settings", modifier = modifier) {
         Column {
+            ToggleOption(
+                title = "Metered connection",
+                subtitle = "Treat the VPN connection as metered; if false, metered status of the underlying network will be inherited",
+                checked = isMetered,
+                onCheckedChange = onSetMetered,
+            )
+
             GroupHeader(title = "VPN addresses", onAdd = onAddAddress)
             if (addresses.isEmpty()) {
                 EmptyListHint()
@@ -821,6 +830,7 @@ fun SettingsScreen(
                 VpnSettingsSection(
                     addresses = settings.vpnAddresses,
                     routes = settings.vpnRoutes,
+                    isMetered = settings.vpnIsMetered,
                     dnsAddresses = settings.dnsAddresses,
                     onAddAddress = {
                         vm.openCidrPopup(
@@ -835,6 +845,7 @@ fun SettingsScreen(
                             onConfirm = vm::addVpnRoute,
                         )
                     },
+                    onSetMetered = vm::setVpnIsMetered,
                     onDeleteRoute = vm::removeVpnRoute,
                     onAddDns = {
                         vm.openIpPopup(

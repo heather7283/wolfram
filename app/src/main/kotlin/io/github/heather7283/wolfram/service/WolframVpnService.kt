@@ -6,7 +6,9 @@ import android.app.NotificationManager
 import android.content.Intent
 import android.net.LocalServerSocket
 import android.net.VpnService
+import android.os.Build
 import android.os.ParcelFileDescriptor
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.compose.LifecyclePauseOrDisposeEffectResult
 import arrow.core.Either
@@ -241,6 +243,7 @@ class WolframVpnService : VpnService() {
             .setSession("Wolfram")
             .apply { settings.vpnAddresses.forEach { addAddress(it.ip, it.prefix) } }
             .apply { settings.vpnRoutes.forEach { addRoute(it.ip, it.prefix) } }
+            .apply { (@RequiresApi(Build.VERSION_CODES.Q) { setMetered(settings.vpnIsMetered) })() }
             .apply { settings.dnsAddresses.forEach { addDnsServer(it) } }
             .apply {
                 if (settings.selectedAppsIsWhitelist) {
