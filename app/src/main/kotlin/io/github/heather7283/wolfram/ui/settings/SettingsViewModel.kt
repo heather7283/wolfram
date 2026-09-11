@@ -6,14 +6,12 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.service.controls.templates.ToggleRangeTemplate
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.heather7283.wolfram.data.backup.BackupRepository
 import io.github.heather7283.wolfram.data.settings.SettingsRepository
-import io.github.heather7283.wolfram.data.template.Template
 import io.github.heather7283.wolfram.data.template.TemplateRepository
 import io.github.heather7283.wolfram.utils.CIDR
 import kotlinx.coroutines.flow.MutableStateFlow

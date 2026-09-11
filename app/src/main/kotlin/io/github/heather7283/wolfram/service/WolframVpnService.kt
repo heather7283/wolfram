@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.compose.LifecyclePauseOrDisposeEffectResult
 import arrow.core.Either
 import arrow.core.flatMap
 import dagger.hilt.android.AndroidEntryPoint
